@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HyFly-4 // Interactive 3D Virtual Workspace</title>
+  <link rel="stylesheet" href="css/style.css">
+  
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- 3D Canvas Container -->
+  <div id="canvas-container">
+    <canvas id="webgl-canvas"></canvas>
+  </div>
+
+  <!-- UI Overlay -->
+  <div class="ui-layer">
+    <!-- Header Controls -->
+    <header class="header-bar">
+      <div class="brand-section">
+        <h1 class="brand-title">HyFly-4</h1>
+        <span class="brand-badge">Workspace 3D</span>
+      </div>
+
+      <div class="controls-group">
+        <div class="audio-status-pill">
+          <div class="visualizer-bars">
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+          </div>
+          <span id="audio-track-name">Audio Off</span>
+        </div>
+
+        <button type="button" id="btn-audio" class="btn-ctrl">Lo-Fi: Paused</button>
+        <button type="button" id="btn-mute" class="btn-ctrl">Mute</button>
+        <button type="button" id="btn-env" class="btn-ctrl">Sky: Night</button>
+        <button type="button" id="btn-reset-cam" class="btn-ctrl">Reset View</button>
+      </div>
+    </header>
+
+    <!-- Center Reticle / Tooltip -->
+    <div id="hover-tooltip" class="hover-tooltip"></div>
+
+    <!-- Notification Toasts -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Footer Information Bar -->
+    <footer class="footer-bar">
+      <div class="hints-pill">
+        <span><strong>Click:</strong> Interact with items (PC, Lamp, Radio, Window, Coffee)</span>
+        <span><strong>Left Click + Drag:</strong> Rotate Camera</span>
+        <span><strong>Scroll:</strong> Zoom</span>
+      </div>
+      <div class="stats-pill">
+        <span>HyFly Autonomous Engine v4.2</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Virtual Computer Dialog Modal -->
+  <dialog id="pc-dialog" class="modal-dialog" aria-labelledby="pc-dialog-title" closedby="any">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <h2 id="pc-dialog-title">HyFly-4 Terminal & Workstation</h2>
+        <div class="modal-tabs">
+          <button type="button" class="tab-btn active" data-tab="terminal">Terminal</button>
+          <button type="button" class="tab-btn" data-tab="notes">Notes</button>
+          <button type="button" class="tab-btn" data-tab="specs">Specs</button>
+        </div>
+      </div>
+      <form method="dialog">
+        <button class="modal-close-btn" aria-label="Close Workstation dialog">✕</button>
+      </form>
+    </div>
+
+    <div class="modal-body">
+      <!-- Terminal View -->
+      <section id="tab-terminal" class="terminal-view">
+        <div id="terminal-output" class="terminal-output"></div>
+        <div class="terminal-prompt-row">
+          <span class="terminal-prompt">hyfly@workstation:~$</span>
+          <input type="text" id="terminal-input" class="terminal-input" autocomplete="off" spellcheck="false" placeholder="Type 'help' for command manual..." autofocus>
+        </div>
+      </section>
+
+      <!-- Notes View -->
+      <section id="tab-notes" class="notes-view" style="display: none;">
+        <textarea id="notes-content" class="notes-textarea" spellcheck="false" placeholder="Write development notes, checklist items, or research logs..."></textarea>
+        <div class="notes-footer">
+          <span id="notes-word-count">0 words | Autosaved</span>
+          <span>Stored in browser local storage</span>
+        </div>
+      </section>
+
+      <!-- Specs View -->
+      <section id="tab-specs" class="specs-view" style="display: none;">
+        <div class="spec-card">
+          <div class="spec-title">System Architecture</div>
+          <div class="spec-value">x86_64 RT-POSIX</div>
+          <div class="spec-bar-bg"><div class="spec-bar-fill" style="width: 100%;"></div></div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-title">CPU Utilization (Simulated)</div>
+          <div id="spec-cpu" class="spec-value">24%</div>
+          <div class="spec-bar-bg"><div id="spec-cpu-bar" class="spec-bar-fill" style="width: 24%;"></div></div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-title">Memory Allocation</div>
+          <div class="spec-value">16.4 GB / 64 GB</div>
+          <div class="spec-bar-bg"><div class="spec-bar-fill" style="width: 26%;"></div></div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-title">System Uptime</div>
+          <div id="spec-uptime" class="spec-value">00:00:00</div>
+          <div class="spec-bar-bg"><div class="spec-bar-fill" style="width: 75%;"></div></div>
+        </div>
+      </section>
+    </div>
+  </dialog>
+
+  <!-- Main Orchestrator Script -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Editor configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node / package artifacts
+node_modules/
+package-lock.json
+
+# Local scratch / test files
+.tmp/
+*.log

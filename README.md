@@ -27,14 +27,26 @@ HyFly-4 is an interactive three-dimensional virtual house and interior explorati
   * `brooch_3.png`: Ornate golden witch guild brooch
   * `broom.png`: Magic wand and staff accessories
 
-### 2. Procedural Animation System
-* **Resting Pose Calibration:** Modulates default T-pose arms into a natural relaxed posture alongside the coat.
-* **Locomotion Kinematics:** Dynamic leg swing, knee flexion, and arm swing synchronized with movement speed and sprint multipliers.
-* **Idle Breathing:** Continuous spine and head pitch oscillations simulating natural breathing.
+### 2. Procedural Animation System & Multi-Mesh Kinematics
+* **Unified Multi-Skeleton Coordination:** Automatically groups and synchronizes identical bone nodes across all seven distinct SkinnedMeshes (Body, Skirt, Coat, Shirt, Hair, Head, Hat) so leg, arm, and torso movements deform all mesh layers in unison.
+* **Full Humanoid Leg Kinematics:** Dynamic upper thigh swing, realistic rearward knee bending (Lower Leg flexion), ankle landing angle adjustment, and toe takeoff rotation.
+* **Hip Bobbing and Pelvis Sway:** Vertical bounce (0.05m stride oscillation) and lateral pelvic roll synchronized with gait frequency, generating realistic body weight transfer.
+* **Spine Counter-Rotation & Breathing:** Upper torso counter-rotates against hip swing during locomotion and demonstrates rhythmic natural chest expansion while idle.
+* **Secondary Anime Motion Dynamics:**
+  * Flowing multi-stage hair wave physics along the rear locks and side braids.
+  * Witch hat tip oscillation responding to movement velocity and stride impacts.
+  * Dynamic skirt and coat-tail flutter adjusting to leg swings and speed.
 * **Synchronized Footstep Audio:** Real-time synthesis of hardwood floor contact sounds triggered on footfall down-beats.
-* **Jump Mechanics:** Jump impulse with takeoff sound, airborne leg tuck, gravitational acceleration, and landing sound effect.
+* **Jump Mechanics:** Takeoff impulse audio, airborne knee tuck, gravitational acceleration, and impact sound on landing.
 
-### 3. Third-Person Camera Rig
+### 3. Integrated Accessories
+* **Witch Magic Wand:** Handcrafted dark mahogany wand with spiraling brass filigree, golden star finial, and an illuminated cyan crystal gem casting active dynamic point lighting. Attached to the right wrist.
+* **Signature Witch Broomstick:** Slung diagonally across Elaina's back with gold satin ribbon wrap and natural straw bristles.
+* **Adventurer Travel Satchel & Potions:** Leather adventurer hip pouch equipped with brass buckles and twin alchemical potion vials (glowing cyan mana elixir and amethyst health tonic).
+* **Floating Arcane Grimoire:** Ornate leather-bound spellbook with gilded page edges and a glowing celestial sigil hovering alongside her left side, gently bobbing and rotating in levitation.
+* **Magical Stardust Mana Particles:** Swirling stardust motes orbiting her path.
+
+### 4. Third-Person Camera Rig
 * Spherical coordinate camera following Elaina with smooth interpolation.
 * Unconstrained horizontal mouse orbiting and vertical pitch clamping.
 * Boundary clamping to eliminate camera clipping through exterior residence walls.

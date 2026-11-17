@@ -1,55 +1,77 @@
 /**
  * Main Application Orchestrator for HyFly-4
+ * Multi-Room House Exploration Game & 3D Interactive Hub
  */
 import { SceneManager } from './scene.js';
-import { RoomBuilder } from './room.js';
+import { HouseBuilder } from './house.js';
+import { PlayerController } from './player.js';
 import { VirtualTerminal } from './terminal.js';
 import { UIManager } from './ui.js';
 import { soundEngine } from './audio.js';
 
 window.addEventListener('DOMContentLoaded', () => {
-  const container = document.getElementById('canvas-container');
-  const sceneMgr = new SceneManager(container);
-  const roomBuilder = new RoomBuilder(sceneMgr.scene);
-  const interactiveObjects = roomBuilder.build();
-  sceneMgr.interactiveObjects = interactiveObjects;
+  const canvas = document.getElementById('webgl-canvas');
+  const sceneMgr = new SceneManager(canvas);
+
+  // Build the whole house
+  const houseBuilder = new HouseBuilder(sceneMgr.scene);
+  const houseData = houseBuilder.build();
+  sceneMgr.interactiveObjects = houseData.interactive;
+
+  // Initialize Player Character
+  const player = new PlayerController(sceneMgr.scene, sceneMgr.camera, canvas);
+  player.colliders = houseData.colliders;
+
+  // Initial player starting location (Central Corridor near the 3D name banner)
+  player.position.set(1.5, 0, 1.5);
 
   const terminal = new VirtualTerminal();
-  const ui = new UIManager(sceneMgr, roomBuilder);
+  const ui = new UIManager(sceneMgr, houseBuilder);
 
-  // Mouse hover detection
-  let currentHovered = null;
-  window.addEventListener('pointermove', (e) => {
-    // Only check if pointer isn't over open dialog or UI panels
-    if (document.getElementById('pc-dialog')?.open) return;
-    const hit = sceneMgr.checkIntersection(e);
-    if (hit) {
-      document.body.style.cursor = 'pointer';
-      currentHovered = hit;
-      ui.updateTooltip(hit.userData.label, e.clientX, e.clientY);
-    } else {
-      document.body.style.cursor = 'default';
-      currentHovered = null;
-      ui.updateTooltip(null);
-    }
-  });
+  // Proximity interaction state
+  let nearbyObject = null;
+  const promptEl = document.getElementById('interaction-prompt');
 
-  // Click interaction dispatch
-  window.addEventListener('pointerup', (e) => {
-    // Avoid triggering when interacting with UI or dragging camera
-    if (e.target.closest('.ui-layer') || document.getElementById('pc-dialog')?.open) {
-      return;
+  function checkProximity() {
+    let closestObj = null;
+    let closestDist = 3.2;
+
+    for (const obj of houseData.interactive) {
+      const worldPos = new THREE.Vector3();
+      obj.getWorldPosition(worldPos);
+      const dist = player.position.distanceTo(worldPos);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestObj = obj;
+      }
     }
 
-    const hit = sceneMgr.checkIntersection(e);
-    if (!hit) return;
+    nearbyObject = closestObj;
+    if (promptEl) {
+      if (nearbyObject && !document.getElementById('pc-dialog')?.open) {
+        promptEl.textContent = `[E] ${nearbyObject.userData.label || 'Interact'}`;
+        promptEl.classList.add('visible');
+      } else {
+        promptEl.classList.remove('visible');
+      }
+    }
+  }
 
-    const action = hit.userData.name;
+  function triggerInteraction(obj) {
+    if (!obj) return;
+    const action = obj.userData.name;
+
     switch (action) {
       case 'lamp':
-        const state = roomBuilder.toggleLamp();
-        soundEngine.playLampClick(state);
-        ui.showToast(state ? 'Desk lamp turned on' : 'Desk lamp turned off');
+        const lampState = houseBuilder.toggleLamp();
+        soundEngine.playLampClick(lampState);
+        ui.showToast(lampState ? 'Desk lamp turned on' : 'Desk lamp turned off');
+        break;
+
+      case 'floor_lamp':
+        const flState = houseBuilder.toggleFloorLamp();
+        soundEngine.playLampClick(flState);
+        ui.showToast(flState ? 'Living room standing lamp turned on' : 'Standing lamp turned off');
         break;
 
       case 'radio':
@@ -59,6 +81,29 @@ window.addEventListener('DOMContentLoaded', () => {
 
       case 'pc':
         ui.openTerminalDialog();
+        break;
+
+      case 'tv':
+        const ch = houseBuilder.toggleTV();
+        soundEngine.playChime();
+        ui.showToast(`TV Switched to Channel 0${ch + 1}`);
+        break;
+
+      case 'fridge':
+        const isOpen = houseBuilder.toggleFridge();
+        soundEngine.playMugSip();
+        ui.showToast(isOpen ? 'Opened refrigerator: Grabbed an iced matcha latte' : 'Closed refrigerator');
+        break;
+
+      case 'stove':
+        const flameOn = houseBuilder.toggleStove();
+        soundEngine.playLampClick(flameOn);
+        ui.showToast(flameOn ? 'Kitchen stove ignited (Blue cooking flame)' : 'Kitchen stove turned off');
+        break;
+
+      case 'sofa':
+        soundEngine.playChime();
+        ui.showToast('Relaxed on the living room sofa');
         break;
 
       case 'window':
@@ -73,24 +118,58 @@ window.addEventListener('DOMContentLoaded', () => {
         soundEngine.playMugSip();
         ui.showToast('Took a warm sip of coffee');
         break;
+    }
+  }
 
-      case 'chair':
-        roomBuilder.spinChair();
-        ui.showToast('Spun the chair');
-        break;
+  // Key 'E' triggers proximity interaction
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyE') {
+      if (nearbyObject && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        triggerInteraction(nearbyObject);
+      }
     }
   });
 
-  // Animation Loop
-  let clock = 0;
-  function animate() {
-    requestAnimationFrame(animate);
-    clock += 0.016;
+  // Direct Click interaction
+  window.addEventListener('pointerup', (e) => {
+    if (e.target.closest('.ui-layer') || document.getElementById('pc-dialog')?.open) {
+      return;
+    }
+    const hit = sceneMgr.checkIntersection(e);
+    if (hit) {
+      triggerInteraction(hit);
+    }
+  });
 
-    roomBuilder.update(clock, soundEngine.isPlayingMusic);
+  // Hover detection
+  window.addEventListener('pointermove', (e) => {
+    if (document.getElementById('pc-dialog')?.open) return;
+    const hit = sceneMgr.checkIntersection(e);
+    if (hit) {
+      document.body.style.cursor = 'pointer';
+      ui.updateTooltip(hit.userData.label, e.clientX, e.clientY);
+    } else {
+      document.body.style.cursor = 'default';
+      ui.updateTooltip(null);
+    }
+  });
+
+  // Main Loop
+  let lastTime = performance.now();
+  let clock = 0;
+
+  function animate(now) {
+    requestAnimationFrame(animate);
+    const dt = Math.min((now - lastTime) / 1000, 0.1);
+    lastTime = now;
+    clock += dt;
+
+    player.update(dt);
+    checkProximity();
+    houseBuilder.update(clock, soundEngine.isPlayingMusic);
     ui.updateVisualizer();
     sceneMgr.render();
   }
 
-  animate();
+  requestAnimationFrame(animate);
 });

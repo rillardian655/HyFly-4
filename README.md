@@ -1,87 +1,108 @@
-# HyFly-4: Interactive 3D Virtual Workspace
+# HyFly-4: Interactive 3D Virtual House and Exploration World
 
-HyFly-4 is an interactive three-dimensional virtual workspace and productivity environment rendered directly in the web browser. The project combines WebGL rendering via Three.js, procedural audio synthesis using the Web Audio API, and modern semantic HTML5 platform standards to create an immersive, responsive desktop simulator.
-
----
-
-## Overview
-
-The application simulates a modern engineering workstation featuring custom low-poly geometries, physical-based rendering (PBR) materials, dynamic lighting scenarios, and interactive components. Users can navigate the 3D scene, toggle lighting and atmospheric parameters, listen to self-contained procedural lo-fi chords, and operate a simulated command-line terminal directly within the virtual monitor.
+HyFly-4 is an interactive three-dimensional virtual house and exploration environment rendered in the web browser. Built on Three.js WebGL rendering, Web Audio procedural synthesis, and modern HTML5 platform standards, the project features a controllable 3D humanoid character, a multi-room architectural interior, interactive appliances, and custom 3D typography displaying the creator credit "XIANLY RUNA".
 
 ---
 
-## Core Features
+## Creator Information
 
-### 1. 3D Scene and Dynamic Lighting Engine
-* **PBR Shading and Shadows:** Implemented using Three.js MeshStandardMaterial and MeshPhysicalMaterial with PCF Soft Shadow Mapping and ACES Filmic Tone Mapping.
-* **Atmospheric Presets:** Real-time transition between Night, Day, and Sunset modes, altering ambient light intensities, sun angles, background hues, and background celestial coordinates.
-* **Camera Rig:** OrbitControls integration configured with polar angle boundaries and distance constraints to prevent clipping beneath the floor plane.
-
-### 2. Procedural Lo-Fi Audio Synthesis
-* **Web Audio API Engine:** Generates mellow lo-fi chords in real time without external audio files or third-party dependencies.
-* **Vinyl Noise Generator:** Simulates physical record crackle and hiss through buffer noise synthesis and bandpass filtering.
-* **Sub-Bass and Lowpass Envelopes:** Smooth exponential frequency sweeps and gentle vibrato LFO modulations.
-* **Audio Visualizer:** Fast Fourier Transform (FFT) frequency spectrum extraction rendered dynamically into header status indicators.
-* **Tactile Sound Effects:** Synthesized audio feedback for mechanical switches, keypresses, window chimes, and mug interactions.
-
-### 3. Integrated Virtual Workstation & Terminal
-* **Interactive Shell:** In-engine terminal supporting system queries, project manifests, hardware diagnostics, and animated digital rain simulations.
-* **Persistent Notepad:** Built-in scratchpad persisting state across sessions via browser local storage, with real-time character and word count tracking.
-* **System Telemetry:** Simulated hardware telemetry display tracking CPU loads, memory allocation, and operational uptime.
-
-### 4. Raycasting and Interactive Objects
-* **Desk Lamp:** Interactive articulated desk lamp with physical PointLight toggling and emissive bulb updates.
-* **Boombox Radio:** Retro sound system with reactive speaker cone vibration synchronized to active music synthesis.
-* **Virtual PC:** Screen displaying live canvas telemetry; clicking launches the full workstation modal.
-* **Window:** Direct viewport to the horizon that cycles the world lighting configuration on interaction.
-* **Coffee Mug:** Ceramic mug with continuous steam particle kinematics.
-* **Ergonomic Chair:** Swivel chair with physics-based rotary damping upon interaction.
+* **Architect and Lead Developer:** xianly runa
+* **Display Name in Scene:** XIANLY RUNA (Rendered as 3D extruded neon block typography on the central feature wall)
+* **GitHub Repository:** https://github.com/rillardian655/HyFly-4
 
 ---
 
-## Technical Specifications
+## Architectural Layout and Zones
 
-| Component | Technology | Description |
-|---|---|---|
-| Core Rendering | Three.js (v0.160.0) | WebGL scene graph, camera frustum, shadow casting |
-| Controls | Three.js OrbitControls | Damped spherical coordinate orbit controller |
-| Audio Engine | Web Audio API | Procedural chord oscillator, noise buffer, analyser |
-| Layout & Styles | Modern CSS3 | Glassmorphic overlay, CSS variables, modal containment |
-| Dialog System | HTML5 Dialog Element | Native modal overlay with light-dismiss fallback |
-| Language | ECMAScript 2022+ | Modular ES modules, strict event delegation |
+The virtual world spans a 28m by 28m architectural plan divided into distinct functional zones with physical boundary colliders:
+
+### 1. Central Showcase Wall
+* Features a high-mounted, illuminated 3D neon typography banner reading **"XIANLY RUNA"** constructed from procedural volumetric glyphs with cyan and amber emissive properties and dedicated point-light projectors.
+* Serves as the central corridor connecting all interior zones.
+
+### 2. Workstation and Cyber Studio (North-West Zone)
+* **Ultrawide Computer Setup:** High-resolution monitor displaying animated system telemetry canvas; interacting opens the full-screen terminal modal.
+* **Articulated Desk Lamp:** Interactive desk light featuring real-time point lighting and dynamic shade glow.
+* **Lo-Fi Audio Boombox:** Synthesizer station with animated speaker cones reacting to music synthesis.
+* **Desk Accessories:** Mechanical keyboard, precision mouse, coffee mug with active steam particle physics, and floating wall bookshelves.
+
+### 3. Living Room (North-East Zone)
+* **Sectional L-Shaped Sofa:** Plush lounge furniture with resting interaction.
+* **Wall-Mounted Smart TV:** Generates real-time procedural video channels (Channel 01: Synthwave Horizon flight stream, Channel 02: UAV telemetry and radar tracking).
+* **Standing Floor Lamp:** Floor lighting fixture with room-filling illumination.
+* **Modern Fireplace:** Stone hearth with ember glow and warm ambient light.
+* **Lounge Table and Floor Rug:** Low-profile center table and textured textile rug.
+
+### 4. Kitchen and Dining (South-West Zone)
+* **Island Kitchen Counter:** White marble countertop with under-cabinet storage.
+* **Double-Door Refrigerator:** Hinged door mechanism that swings open on interaction.
+* **Induction and Gas Stove:** Functional range with toggleable blue flame ignition and localized point light.
+* **Bar Stools and Sink:** Stainless steel sink, faucet, and high bar seating.
+
+---
+
+## Character Kinematics and Camera System
+
+### 1. Humanoid Player Avatar
+* Stylized 3D character equipped with a jacket, backpack, headgear, visor, and dual-tone limbs.
+* Procedural skeletal walk cycle: Dynamic arm and leg swinging synchronized to linear velocity and sprint multipliers.
+* Physics kinematics: Jump impulse calculation, gravitational acceleration, and ground contact detection.
+
+### 2. Collision Detection
+* Axis-Aligned Bounding Box (AABB) collision checks against perimeter walls, interior partitions, desks, counters, appliances, and furniture objects.
+* Dynamic sliding resolution along unobstructed axes to maintain smooth locomotion.
+
+### 3. Third-Person Camera Rig
+* Spherical coordinate camera following the player avatar with smooth damping.
+* Unconstrained horizontal mouse orbiting and vertical pitch clamping to eliminate disorientation.
+* Mouse wheel distance zoom with near and far clipping bounds.
+
+---
+
+## Procedural Lo-Fi Audio Synthesis Engine
+
+* **Real-Time Chord Synthesizer:** Built completely on the native Web Audio API without pre-recorded MP3 or WAV dependencies.
+* **Subtractive Lowpass Filtering:** Dynamic filter envelope shaping lo-fi jazz chord progressions.
+* **Vinyl Noise Generator:** Procedural crackle and surface hiss synthesized via custom audio buffer noise.
+* **Tactile Sound Effects:** Synthesized audio cues for mechanical switches, keyboard strokes, window transitions, and appliance interactions.
+* **Audio Visualizer:** Fast Fourier Transform (FFT) frequency spectrum extraction rendered into the top HUD status bar.
 
 ---
 
 ## Interactive Controls Reference
 
-### Mouse and Navigation
-* **Left Click + Drag:** Rotate camera view around workstation focal point.
-* **Right Click + Drag:** Pan camera horizontally and vertically.
-* **Scroll Wheel:** Zoom camera in and out within configured distance bounds.
-* **Pointer Hover:** Inspect interactive objects and reveal target labels.
-* **Left Click on Object:** Trigger contextual item action (power switch, terminal launch, audio playback).
+### Movement and Exploration
+* **W / Arrow Up:** Walk forward.
+* **S / Arrow Down:** Walk backward.
+* **A / Arrow Left:** Turn / strafe left.
+* **D / Arrow Right:** Turn / strafe right.
+* **Left Shift / Right Shift:** Sprint.
+* **Spacebar:** Jump.
+* **Mouse Drag:** Rotate third-person camera perspective.
+* **Mouse Scroll Wheel:** Zoom camera distance.
 
-### Keyboard Shortcuts (Terminal Modal)
-* **Enter:** Execute typed terminal command.
-* **Up / Down Arrow:** Navigate terminal command history.
-* **Escape:** Dismiss active workstation modal dialog.
+### Interaction
+* **E Key or Left Click:** Trigger interaction when near an active object.
+* **Proximity HUD:** An on-screen prompt displays automatically whenever the player approaches an interactable appliance or device.
 
 ---
 
 ## Terminal Command Reference
 
+Accessible via the Workstation PC monitor:
+
 | Command | Arguments | Description |
 |---|---|---|
 | `help` | None | Displays the reference table of supported terminal commands. |
-| `about` | None | Prints architectural and project overview information. |
-| `neofetch` / `specs` | None | Displays system environment information and ASCII banner. |
-| `projects` | None | Lists connected robotics, game, and software projects. |
-| `skills` | None | Summarizes primary engineering competencies and tech stack. |
-| `matrix` | None | Starts a green digital rain animation stream. |
-| `date` / `time` | None | Outputs the current system time in UTC format. |
-| `echo` | `<message>` | Echoes supplied message to the terminal screen. |
-| `clear` | None | Clears the terminal output buffer. |
-| `exit` | None | Closes the virtual workstation dialog modal. |
+| `about` | None | Outputs project architecture and author information. |
+| `neofetch` / `specs` | None | Prints hardware configuration, OS specs, and ASCII banner. |
+| `projects` | None | Lists connected robotics, simulation, and software repositories. |
+| `skills` | None | Summarizes primary technical domains and toolchains. |
+| `matrix` | None | Launches an animated green digital rain terminal stream. |
+| `date` / `time` | None | Outputs current system date and UTC time. |
+| `echo` | `<text>` | Echoes input string back to terminal buffer. |
+| `clear` | None | Clears terminal screen history. |
+| `exit` | None | Dismisses workstation terminal modal dialog. |
 
 ---
 
@@ -89,17 +110,19 @@ The application simulates a modern engineering workstation featuring custom low-
 
 ```
 HyFly-4/
-├── index.html          # Application entry point, UI overlay, and dialog structures
+├── index.html          # HTML5 entry document, UI overlay, and modal templates
 ├── css/
-│   └── style.css       # Core styles, glassmorphic layout, and dialog rules
+│   └── style.css       # Core styling, glassmorphism, HUD, and modal containment
 ├── js/
-│   ├── main.js         # Main loop, raycasting delegation, and lifecycle hooks
-│   ├── scene.js        # Three.js setup, camera, lighting, and environment modes
-│   ├── room.js         # Procedural 3D mesh construction and material definitions
-│   ├── audio.js        # Web Audio API synthesizer, lo-fi chords, and sound FX
-│   ├── ui.js           # Header HUD, visualizer, tabs, and toast notifications
-│   └── terminal.js     # Virtual terminal commands, scratchpad, and spec monitors
-├── LICENSE             # Project open-source license
+│   ├── main.js         # Game loop, proximity detection, and input coordinator
+│   ├── player.js       # Player character avatar, walk kinematics, and camera rig
+│   ├── house.js        # Multi-room architecture, furniture, and appliances
+│   ├── text3d.js       # Procedural 3D block typography for "XIANLY RUNA"
+│   ├── scene.js        # Three.js WebGL scene, lighting, and day-night presets
+│   ├── audio.js        # Web Audio API lo-fi synthesizer and sound effects
+│   ├── ui.js           # HUD status bars, tabs, visualizer, and notifications
+│   └── terminal.js     # Virtual terminal commands, specs, and local notes
+├── LICENSE             # Project MIT open-source license
 └── README.md           # Technical documentation and reference manual
 ```
 
@@ -108,44 +131,37 @@ HyFly-4/
 ## Getting Started
 
 ### Prerequisites
-A modern web browser with WebGL2 and Web Audio API support (such as Chrome 116+, Edge 116+, Firefox 125+, or Safari 17+).
+A modern web browser supporting WebGL2 and Web Audio API (Chrome 116+, Edge 116+, Firefox 125+, Safari 17+).
 
 ### Running Locally
-Because this project utilizes ES Modules (`import`/`export`) and native import maps, it should be served via an HTTP server.
+Because this project utilizes ES Modules and native browser import maps, it must be served through an HTTP server:
 
-1. Clone or navigate to the project directory:
-   ```bash
-   cd Hyfly-3
-   ```
+```bash
+# Navigate to the project directory
+cd Hyfly-3
 
-2. Start a lightweight local server:
-   * Using Python:
-     ```bash
-     python3 -m http.server 8000
-     ```
-   * Using Node.js:
-     ```bash
-     npx serve .
-     ```
+# Start Python HTTP server
+python3 -m http.server 8000
+```
 
-3. Open your browser and navigate to:
-   ```
-   http://localhost:8000
-   ```
+Open your browser and navigate to:
+```
+http://localhost:8000
+```
 
 ---
 
-## Accessibility and Compliance
+## Accessibility and Platform Standards
 
-* **Modal Focus and Trap Management:** Uses the native `<dialog>` element for modal layering, ensuring standard keyboard navigation, top-layer isolation, and `Esc` key dismissal.
-* **Scroll Chaining Prevention:** Applies `overscroll-behavior: contain` to `:modal` and `::backdrop` selectors to prevent scrolling chaining to the underlying document.
-* **Light Dismiss:** Implements pointer boundary detection for browsers without native `closedby="any"` support.
+* **Native Dialog Layer:** Workstation window is implemented using the standard `<dialog>` element via `showModal()`.
+* **Scroll Containment:** Styled with `overscroll-behavior: contain` on both `dialog:modal` and `dialog::backdrop` selectors.
+* **Light-Dismiss Fallback:** Robust pointer position boundary checking ensuring graceful dismissal on external click across all browsers.
 
 ---
 
 ## License
 
-This project is distributed under the MIT License. Refer to the LICENSE file for full license terms.
+This project is licensed under the MIT License. See the LICENSE file for full license details.
 
-Author: rillardian655
+Author: xianly runa
 Repository: https://github.com/rillardian655/HyFly-4

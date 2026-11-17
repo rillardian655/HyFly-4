@@ -61,7 +61,7 @@ export class PlayerController {
     this.wandMesh = null;
     this.broomMesh = null;
     this.baseModelY = 0;
-    this.bones = {};
+    this.boneGroups = {};
     this.initBoneRotations = {};
     this.isLoaded = false;
 
@@ -244,14 +244,17 @@ export class PlayerController {
             }
           }
 
-          // Capture the root bone for each joint (avoids 5x multiplier distortions)
-          if (child.isBone && !this.bones[child.name]) {
-            this.bones[child.name] = child;
-            this.initBoneRotations[child.name] = {
-              x: child.rotation.x,
-              y: child.rotation.y,
-              z: child.rotation.z
-            };
+          // Group all bone instances across all skeletons (Head, Hair, Body, Coat, Dress)
+          if (child.isBone) {
+            if (!this.boneGroups[child.name]) {
+              this.boneGroups[child.name] = [];
+              this.initBoneRotations[child.name] = {
+                x: child.rotation.x,
+                y: child.rotation.y,
+                z: child.rotation.z
+              };
+            }
+            this.boneGroups[child.name].push(child);
           }
         });
 
@@ -278,9 +281,9 @@ export class PlayerController {
               }
             });
 
-            // Position wand naturally at her right hand
-            wand.position.set(0.32, 0.72, 0.14);
-            wand.rotation.set(-0.35, 0.15, 0.22);
+            // Position wand naturally at her right hand in relaxed side posture
+            wand.position.set(-0.16, 0.74, 0.08);
+            wand.rotation.set(-0.25, 0.15, -0.12);
             this.modelContainer.add(wand);
           },
           undefined,
@@ -624,6 +627,15 @@ export class PlayerController {
     this.updateCamera();
   }
 
+  setBoneRotation(name, axis, targetVal, lerpFactor = 0.25) {
+    const list = this.boneGroups[name];
+    if (!list) return;
+    for (let i = 0; i < list.length; i++) {
+      const b = list[i];
+      b.rotation[axis] = THREE.MathUtils.lerp(b.rotation[axis], targetVal, lerpFactor);
+    }
+  }
+
   updateLocomotion(isMoving, speed, dt, turnDiff) {
     const now = performance.now() * 0.001;
 
@@ -634,6 +646,20 @@ export class PlayerController {
         this.currentEmote = null;
       }
     }
+
+    // Natural arm rest angle: brings arms down from default 67.5 deg T-pose into natural 14 deg relaxed side posture
+    const armRestX = 0.95;
+    const baseArmLX = this.initBoneRotations['Upper_Arm_L']?.x ?? 0.157;
+    const baseArmLZ = this.initBoneRotations['Upper_Arm_L']?.z ?? 0.068;
+    const baseArmRX = this.initBoneRotations['Upper_Arm_R']?.x ?? 0.157;
+    const baseArmRZ = this.initBoneRotations['Upper_Arm_R']?.z ?? -0.068;
+    const baseElbowLZ = this.initBoneRotations['Lower_Arm_L']?.z ?? 0.164;
+    const baseElbowRZ = this.initBoneRotations['Lower_Arm_R']?.z ?? -0.164;
+
+    const baseLegLX = this.initBoneRotations['Upper_Leg_L']?.x ?? 3.08;
+    const baseKneeLZ = this.initBoneRotations['Lower_Leg_L']?.z ?? 0.021;
+    const baseLegRX = this.initBoneRotations['Upper_Leg_R']?.x ?? 3.08;
+    const baseKneeRZ = this.initBoneRotations['Lower_Leg_R']?.z ?? -0.029;
 
     if (this.isFlying) {
       // Broom flight locomotion: Mount broom, hover smoothly
@@ -653,48 +679,25 @@ export class PlayerController {
       }
 
       // Hands grip broom handle
-      if (this.bones['Upper_Arm_L']) {
-        const baseZ = this.initBoneRotations['Upper_Arm_L']?.z || 0;
-        this.bones['Upper_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_L'].rotation.z, baseZ + 0.45, 0.2);
-      }
-      if (this.bones['Lower_Arm_L']) {
-        const baseZ = this.initBoneRotations['Lower_Arm_L']?.z || 0;
-        this.bones['Lower_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_L'].rotation.z, baseZ + 0.35, 0.2);
-      }
-      if (this.bones['Upper_Arm_R']) {
-        const baseZ = this.initBoneRotations['Upper_Arm_R']?.z || 0;
-        this.bones['Upper_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.z, baseZ - 0.45, 0.2);
-      }
-      if (this.bones['Lower_Arm_R']) {
-        const baseZ = this.initBoneRotations['Lower_Arm_R']?.z || 0;
-        this.bones['Lower_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_R'].rotation.z, baseZ - 0.35, 0.2);
-      }
+      this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + 0.35, 0.2);
+      this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ + 0.45, 0.2);
+      this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ + 0.35, 0.2);
+
+      this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + 0.35, 0.2);
+      this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ - 0.45, 0.2);
+      this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ - 0.35, 0.2);
 
       // Legs tuck into flying riding pose
-      if (this.bones['Upper_Leg_L']) {
-        const baseX = this.initBoneRotations['Upper_Leg_L']?.x || 0;
-        this.bones['Upper_Leg_L'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_L'].rotation.x, baseX - 0.35, 0.2);
-      }
-      if (this.bones['Lower_Leg_L']) {
-        const baseZ = this.initBoneRotations['Lower_Leg_L']?.z || 0;
-        this.bones['Lower_Leg_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_L'].rotation.z, baseZ + 0.55, 0.2);
-      }
-      if (this.bones['Upper_Leg_R']) {
-        const baseX = this.initBoneRotations['Upper_Leg_R']?.x || 0;
-        this.bones['Upper_Leg_R'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_R'].rotation.x, baseX - 0.35, 0.2);
-      }
-      if (this.bones['Lower_Leg_R']) {
-        const baseZ = this.initBoneRotations['Lower_Leg_R']?.z || 0;
-        this.bones['Lower_Leg_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_R'].rotation.z, baseZ - 0.55, 0.2);
-      }
+      this.setBoneRotation('Upper_Leg_L', 'x', baseLegLX - 0.35, 0.2);
+      this.setBoneRotation('Lower_Leg_L', 'z', baseKneeLZ + 0.55, 0.2);
+      this.setBoneRotation('Upper_Leg_R', 'x', baseLegRX - 0.35, 0.2);
+      this.setBoneRotation('Lower_Leg_R', 'z', baseKneeRZ - 0.55, 0.2);
 
       // Hair flutter in the wind
       const windFlutter = Math.sin(now * 14) * 0.12;
       ['HairBack_01', 'HairBack_02', 'Coat_L_Back_01', 'Coat_R_Back_01'].forEach((bName) => {
-        if (this.bones[bName]) {
-          const baseX = this.initBoneRotations[bName]?.x || 0;
-          this.bones[bName].rotation.x = THREE.MathUtils.lerp(this.bones[bName].rotation.x, baseX - 0.35 + windFlutter, 0.2);
-        }
+        const baseX = this.initBoneRotations[bName]?.x || 0;
+        this.setBoneRotation(bName, 'x', baseX - 0.35 + windFlutter, 0.2);
       });
     } else if (isMoving && this.isGrounded) {
       const cycleSpeed = speed * (this.keys.sprint ? 3.6 : 2.8);
@@ -715,67 +718,38 @@ export class PlayerController {
       this.modelContainer.rotation.x = THREE.MathUtils.lerp(this.modelContainer.rotation.x, forwardLean, 0.2);
       this.modelContainer.rotation.z = THREE.MathUtils.lerp(this.modelContainer.rotation.z, strideRoll + turnBank, 0.2);
 
-      // 2. Active Arm Swing Kinematics (Natural cross-limb human coordination)
-      const armSwingAmp = 0.52 * strideSpeed;
-      const elbowBendAmp = 0.40 * strideSpeed;
+      // 2. Active Arm Swing Kinematics (Natural human swing from relaxed side posture, NO T-POSE!)
+      const armSwingAmp = 0.48 * strideSpeed;
+      const elbowBendAmp = 0.38 * strideSpeed;
+      const armSwing = stepPhase * armSwingAmp;
 
       if (!this.currentEmote) {
-        if (this.bones['Upper_Arm_L']) {
-          const baseZ = this.initBoneRotations['Upper_Arm_L']?.z || 0;
-          const targetZ = baseZ - stepPhase * armSwingAmp;
-          this.bones['Upper_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_L'].rotation.z, targetZ, 0.3);
-        }
-        if (this.bones['Lower_Arm_L']) {
-          const baseZ = this.initBoneRotations['Lower_Arm_L']?.z || 0;
-          const targetZ = baseZ + Math.max(0, -stepPhase * elbowBendAmp);
-          this.bones['Lower_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_L'].rotation.z, targetZ, 0.3);
-        }
+        // Left arm: armRestX lowers the arm, armSwing moves forward (+Z) and back (-Z)
+        this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + armRestX, 0.3);
+        this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ - armSwing, 0.3);
+        this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ + 0.12 + Math.max(0, -armSwing * 0.5), 0.3);
 
-        if (this.bones['Upper_Arm_R']) {
-          const baseZ = this.initBoneRotations['Upper_Arm_R']?.z || 0;
-          const targetZ = baseZ - stepPhase * armSwingAmp;
-          this.bones['Upper_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.z, targetZ, 0.3);
-        }
-        if (this.bones['Lower_Arm_R']) {
-          const baseZ = this.initBoneRotations['Lower_Arm_R']?.z || 0;
-          const targetZ = baseZ - Math.max(0, stepPhase * elbowBendAmp);
-          this.bones['Lower_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_R'].rotation.z, targetZ, 0.3);
-        }
+        // Right arm: armRestX lowers the arm, armSwing moves forward (+Z) and back (-Z)
+        this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + armRestX, 0.3);
+        this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ - armSwing, 0.3);
+        this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ - 0.12 - Math.max(0, armSwing * 0.5), 0.3);
       }
 
       // 3. Active Leg Strides & Knee Flexion Kinematics
       const legStrideAmp = 0.42 * strideSpeed;
       const kneeBendAmp = 0.45 * strideSpeed;
 
-      if (this.bones['Upper_Leg_L']) {
-        const baseX = this.initBoneRotations['Upper_Leg_L']?.x || 0;
-        const targetX = baseX - stepPhase * legStrideAmp;
-        this.bones['Upper_Leg_L'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_L'].rotation.x, targetX, 0.3);
-      }
-      if (this.bones['Lower_Leg_L']) {
-        const baseZ = this.initBoneRotations['Lower_Leg_L']?.z || 0;
-        const targetZ = baseZ + Math.max(0, stepPhase * kneeBendAmp);
-        this.bones['Lower_Leg_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_L'].rotation.z, targetZ, 0.3);
-      }
+      this.setBoneRotation('Upper_Leg_L', 'x', baseLegLX - stepPhase * legStrideAmp, 0.3);
+      this.setBoneRotation('Lower_Leg_L', 'z', baseKneeLZ + Math.max(0, stepPhase * kneeBendAmp), 0.3);
 
-      if (this.bones['Upper_Leg_R']) {
-        const baseX = this.initBoneRotations['Upper_Leg_R']?.x || 0;
-        const targetX = baseX + stepPhase * legStrideAmp;
-        this.bones['Upper_Leg_R'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_R'].rotation.x, targetX, 0.3);
-      }
-      if (this.bones['Lower_Leg_R']) {
-        const baseZ = this.initBoneRotations['Lower_Leg_R']?.z || 0;
-        const targetZ = baseZ - Math.max(0, -stepPhase * kneeBendAmp);
-        this.bones['Lower_Leg_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_R'].rotation.z, targetZ, 0.3);
-      }
+      this.setBoneRotation('Upper_Leg_R', 'x', baseLegRX + stepPhase * legStrideAmp, 0.3);
+      this.setBoneRotation('Lower_Leg_R', 'z', baseKneeRZ - Math.max(0, -stepPhase * kneeBendAmp), 0.3);
 
       // 4. Subtle Hair & Coat Tail Flutter
       const flutter = Math.sin(this.walkCycle * 2) * 0.08;
       ['HairBack_01', 'HairBack_02', 'Coat_L_Back_01', 'Coat_R_Back_01'].forEach((bName) => {
-        if (this.bones[bName]) {
-          const baseX = this.initBoneRotations[bName]?.x || 0;
-          this.bones[bName].rotation.x = THREE.MathUtils.lerp(this.bones[bName].rotation.x, baseX - 0.12 + flutter, 0.2);
-        }
+        const baseX = this.initBoneRotations[bName]?.x || 0;
+        this.setBoneRotation(bName, 'x', baseX - 0.12 + flutter, 0.2);
       });
 
       // 5. Dynamic Wand and Broom follow
@@ -783,8 +757,8 @@ export class PlayerController {
         this.broomMesh.rotation.z = 0.82 + Math.sin(this.walkCycle) * 0.08;
       }
       if (this.wandMesh && !this.currentEmote) {
-        this.wandMesh.position.y = 0.72 + Math.sin(this.walkCycle * 2) * 0.03;
-        this.wandMesh.rotation.x = -0.35 + stepPhase * 0.25;
+        this.wandMesh.position.set(-0.16, 0.74 + Math.sin(this.walkCycle * 2) * 0.03, 0.08 + armSwing * 0.25);
+        this.wandMesh.rotation.set(-0.25 + armSwing * 0.3, 0.15, -0.12);
       }
 
       // Footstep audio on downbeat
@@ -794,7 +768,7 @@ export class PlayerController {
         soundEngine.playFootstep('wood');
       }
     } else {
-      // Natural Idle Breathing & Gentle Weight Shift (Smooth return to rest pose)
+      // Natural Idle Breathing & Gentle Weight Shift (Completely relaxed arms at sides, NO T-POSE!)
       const breath = Math.sin(now * 2.2) * 0.016;
       const idleSway = Math.sin(now * 1.2) * 0.012;
 
@@ -804,50 +778,30 @@ export class PlayerController {
       this.modelContainer.rotation.z = THREE.MathUtils.lerp(this.modelContainer.rotation.z, idleSway, 0.1);
 
       // Spine & chest idle breath
-      if (this.bones['Chest']) {
-        const baseX = this.initBoneRotations['Chest']?.x || 0;
-        this.bones['Chest'].rotation.x = THREE.MathUtils.lerp(this.bones['Chest'].rotation.x, baseX + breath * 0.4, 0.1);
-      }
+      const baseChestX = this.initBoneRotations['Chest']?.x || -0.236;
+      this.setBoneRotation('Chest', 'x', baseChestX + breath * 0.4, 0.1);
 
-      // Smoothly return arms to calm resting pose unless emote active
+      // Beautiful relaxed arm pose at her sides (no T-pose!)
       if (!this.currentEmote) {
-        if (this.bones['Upper_Arm_L']) {
-          this.bones['Upper_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_L'].rotation.z, this.initBoneRotations['Upper_Arm_L']?.z || 0, 0.12);
-        }
-        if (this.bones['Upper_Arm_R']) {
-          this.bones['Upper_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.z, this.initBoneRotations['Upper_Arm_R']?.z || 0, 0.12);
-          this.bones['Upper_Arm_R'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.x, this.initBoneRotations['Upper_Arm_R']?.x || 0, 0.12);
-        }
-        if (this.bones['Lower_Arm_L']) {
-          this.bones['Lower_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_L'].rotation.z, this.initBoneRotations['Lower_Arm_L']?.z || 0, 0.12);
-        }
-        if (this.bones['Lower_Arm_R']) {
-          this.bones['Lower_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_R'].rotation.z, this.initBoneRotations['Lower_Arm_R']?.z || 0, 0.12);
-        }
-        if (this.bones['Wrist_R']) {
-          this.bones['Wrist_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Wrist_R'].rotation.z, this.initBoneRotations['Wrist_R']?.z || 0, 0.12);
-        }
+        this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + armRestX, 0.15);
+        this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ + breath * 0.2, 0.15);
+        this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ + 0.12, 0.15);
+
+        this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + armRestX, 0.15);
+        this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ - breath * 0.2, 0.15);
+        this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ - 0.12, 0.15);
       }
 
       // Smoothly return legs to neutral standing pose
-      if (this.bones['Upper_Leg_L']) {
-        this.bones['Upper_Leg_L'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_L'].rotation.x, this.initBoneRotations['Upper_Leg_L']?.x || 0, 0.12);
-      }
-      if (this.bones['Upper_Leg_R']) {
-        this.bones['Upper_Leg_R'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_R'].rotation.x, this.initBoneRotations['Upper_Leg_R']?.x || 0, 0.12);
-      }
-      if (this.bones['Lower_Leg_L']) {
-        this.bones['Lower_Leg_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_L'].rotation.z, this.initBoneRotations['Lower_Leg_L']?.z || 0, 0.12);
-      }
-      if (this.bones['Lower_Leg_R']) {
-        this.bones['Lower_Leg_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_R'].rotation.z, this.initBoneRotations['Lower_Leg_R']?.z || 0, 0.12);
-      }
+      this.setBoneRotation('Upper_Leg_L', 'x', baseLegLX, 0.12);
+      this.setBoneRotation('Lower_Leg_L', 'z', baseKneeLZ, 0.12);
+      this.setBoneRotation('Upper_Leg_R', 'x', baseLegRX, 0.12);
+      this.setBoneRotation('Lower_Leg_R', 'z', baseKneeRZ, 0.12);
 
       // Reset hair and coat
       ['HairBack_01', 'HairBack_02', 'Coat_L_Back_01', 'Coat_R_Back_01'].forEach((bName) => {
-        if (this.bones[bName]) {
-          this.bones[bName].rotation.x = THREE.MathUtils.lerp(this.bones[bName].rotation.x, this.initBoneRotations[bName]?.x || 0, 0.1);
-        }
+        const baseX = this.initBoneRotations[bName]?.x || 0;
+        this.setBoneRotation(bName, 'x', baseX, 0.1);
       });
 
       if (this.broomMesh) {
@@ -855,58 +809,40 @@ export class PlayerController {
         this.broomMesh.position.set(-0.16, 0.95, -0.16);
       }
       if (this.wandMesh && !this.currentEmote) {
-        this.wandMesh.position.y = THREE.MathUtils.lerp(this.wandMesh.position.y, 0.72 + breath * 0.5, 0.1);
-        this.wandMesh.rotation.x = THREE.MathUtils.lerp(this.wandMesh.rotation.x, -0.35, 0.1);
+        this.wandMesh.position.set(-0.16, 0.74 + breath * 0.5, 0.08);
+        this.wandMesh.rotation.set(-0.25, 0.15, -0.12);
       }
     }
 
     // Mid-air Jump Pose
     if (!this.isGrounded && !this.isFlying) {
-      if (this.bones['Upper_Arm_L']) {
-        const baseZ = this.initBoneRotations['Upper_Arm_L']?.z || 0;
-        this.bones['Upper_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_L'].rotation.z, baseZ - 0.35, 0.2);
-      }
-      if (this.bones['Upper_Arm_R']) {
-        const baseZ = this.initBoneRotations['Upper_Arm_R']?.z || 0;
-        this.bones['Upper_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.z, baseZ + 0.35, 0.2);
-      }
-      if (this.bones['Upper_Leg_L']) {
-        const baseX = this.initBoneRotations['Upper_Leg_L']?.x || 0;
-        this.bones['Upper_Leg_L'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_L'].rotation.x, baseX - 0.25, 0.2);
-      }
-      if (this.bones['Lower_Leg_L']) {
-        const baseZ = this.initBoneRotations['Lower_Leg_L']?.z || 0;
-        this.bones['Lower_Leg_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_L'].rotation.z, baseZ + 0.5, 0.2);
-      }
+      this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + 0.5, 0.2);
+      this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + 0.5, 0.2);
+      this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ - 0.35, 0.2);
+      this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ + 0.35, 0.2);
+      this.setBoneRotation('Upper_Leg_L', 'x', baseLegLX - 0.25, 0.2);
+      this.setBoneRotation('Lower_Leg_L', 'z', baseKneeLZ + 0.5, 0.2);
     }
 
     // Emotes overrides
     if (this.currentEmote === 'wave') {
       const wavePhase = Math.sin(now * 12);
-      if (this.bones['Upper_Arm_R']) {
-        const baseX = this.initBoneRotations['Upper_Arm_R']?.x || 0;
-        this.bones['Upper_Arm_R'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.x, baseX - 1.25, 0.25);
-      }
-      if (this.bones['Wrist_R']) {
-        const baseZ = this.initBoneRotations['Wrist_R']?.z || 0;
-        this.bones['Wrist_R'].rotation.z = baseZ + wavePhase * 0.35;
-      }
+      // Raise right arm up into waving salute
+      this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX - 1.25, 0.25);
+      this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ + 0.3, 0.25);
+      this.setBoneRotation('Wrist_R', 'z', (this.initBoneRotations['Wrist_R']?.z || 0) + wavePhase * 0.35, 0.3);
       if (this.wandMesh) {
-        this.wandMesh.position.set(0.35, 1.45, 0.2);
-        this.wandMesh.rotation.x = 0.2;
+        this.wandMesh.position.set(-0.22, 1.45, 0.2);
+        this.wandMesh.rotation.set(0.2, 0.1, 0.3);
       }
     } else if (this.currentEmote === 'cast') {
-      if (this.bones['Upper_Arm_R']) {
-        const baseZ = this.initBoneRotations['Upper_Arm_R']?.z || 0;
-        this.bones['Upper_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.z, baseZ - 0.85, 0.25);
-      }
-      if (this.bones['Lower_Arm_R']) {
-        const baseZ = this.initBoneRotations['Lower_Arm_R']?.z || 0;
-        this.bones['Lower_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_R'].rotation.z, baseZ - 0.45, 0.25);
-      }
+      // Point wand forward for starlight spell
+      this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + 0.15, 0.25);
+      this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ - 0.75, 0.25);
+      this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ - 0.45, 0.25);
       if (this.wandMesh) {
-        this.wandMesh.position.set(0.28, 0.95, 0.45);
-        this.wandMesh.rotation.x = 1.2;
+        this.wandMesh.position.set(-0.16, 0.95, 0.45);
+        this.wandMesh.rotation.set(1.2, 0, 0);
       }
     }
   }

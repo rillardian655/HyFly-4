@@ -1,10 +1,13 @@
 /**
- * Contemporary Casual 3D Character Controller
- * Relaxed Scandinavian / Urban Minimalist Outfit:
- * Cozy knit sweater, natural hairstyle, clean chinos, and leather sneakers.
- * 100% free of cyber/sci-fi elements.
+ * Contemporary Casual 3D Character Controller & Kinematics
+ * Features:
+ * - Natural human outfit (knit sweater, casual chinos, leather sneakers)
+ * - Synchronized footstep audio effects and landing physics
+ * - Camera occlusion raycasting to prevent wall clipping
+ * - Smooth physics locomotion and responsive jump mechanics
  */
 import * as THREE from 'three';
+import { soundEngine } from './audio.js';
 
 export class PlayerController {
   constructor(scene, camera, domElement) {
@@ -28,19 +31,23 @@ export class PlayerController {
     this.rotation = 0;
     this.targetRotation = 0;
     this.isGrounded = true;
+    this.wasGrounded = true;
     this.walkCycle = 0;
-    this.walkSpeed = 5.0;
-    this.sprintSpeed = 8.5;
+    this.lastFootstepStep = 0;
+    this.walkSpeed = 5.2;
+    this.sprintSpeed = 8.6;
     this.gravity = 22.0;
-    this.jumpForce = 7.6;
+    this.jumpForce = 7.8;
 
     // Camera follow parameters
-    this.camDistance = 4.6;
+    this.camDistance = 4.8;
+    this.targetCamDistance = 4.8;
     this.camHeight = 2.4;
     this.camAngleX = 0;
-    this.camAngleY = 0.28;
+    this.camAngleY = 0.26;
 
     this.colliders = [];
+    this.cameraRaycaster = new THREE.Raycaster();
     this.group = new THREE.Group();
     this.buildCasualCharacter();
     this.scene.add(this.group);
@@ -50,13 +57,12 @@ export class PlayerController {
   }
 
   buildCasualCharacter() {
-    // Warm, natural color palette
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdfba, roughness: 0.6 }); // Natural warm skin tone
-    const hairMat = new THREE.MeshStandardMaterial({ color: 0x2b1e16, roughness: 0.4 }); // Dark espresso hair
-    const sweaterMat = new THREE.MeshStandardMaterial({ color: 0xe5ded6, roughness: 0.85 }); // Cozy cream knit wool sweater
-    const pantsMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.75 }); // Dark slate chinos
-    const sneakerSoleMat = new THREE.MeshStandardMaterial({ color: 0xfdfdfd, roughness: 0.3 }); // Clean white sole
-    const sneakerUpperMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }); // Minimalist white leather
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdfba, roughness: 0.6 });
+    const hairMat = new THREE.MeshStandardMaterial({ color: 0x2b1e16, roughness: 0.4 });
+    const sweaterMat = new THREE.MeshStandardMaterial({ color: 0xe5ded6, roughness: 0.85 });
+    const pantsMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.75 });
+    const sneakerSoleMat = new THREE.MeshStandardMaterial({ color: 0xfdfdfd, roughness: 0.25 });
+    const sneakerUpperMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 });
 
     // 1. Torso: Cozy Knit Wool Crewneck Sweater
     const torsoGeo = new THREE.CylinderGeometry(0.36, 0.32, 0.82, 16);
@@ -65,7 +71,6 @@ export class PlayerController {
     this.torso.castShadow = true;
     this.group.add(this.torso);
 
-    // Ribbed Crewneck Collar
     const collar = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.045, 8, 16), sweaterMat);
     collar.position.set(0, 1.76, 0);
     collar.rotation.x = Math.PI / 2;
@@ -78,7 +83,6 @@ export class PlayerController {
     this.head.castShadow = true;
     this.group.add(this.head);
 
-    // Natural layered hairstyle
     const hairBase = new THREE.Mesh(
       new THREE.SphereGeometry(0.26, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.58),
       hairMat
@@ -86,7 +90,6 @@ export class PlayerController {
     hairBase.position.set(0, 2.02, -0.02);
     this.group.add(hairBase);
 
-    // Side hair & bangs tufts
     for (let i = 0; i < 4; i++) {
       const lock = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.16, 6), hairMat);
       lock.position.set(-0.12 + i * 0.08, 2.08, 0.2);
@@ -95,24 +98,24 @@ export class PlayerController {
       this.group.add(lock);
     }
 
-    // 3. Articulated Arms (Sweater sleeves & hands)
+    // 3. Articulated Arms
     this.leftArm = this.buildArm(-1, sweaterMat, skinMat);
     this.rightArm = this.buildArm(1, sweaterMat, skinMat);
     this.group.add(this.leftArm);
     this.group.add(this.rightArm);
 
-    // 4. Articulated Legs (Chino trousers & white leather sneakers)
+    // 4. Articulated Legs
     this.leftLeg = this.buildLeg(-1, pantsMat, sneakerSoleMat, sneakerUpperMat);
     this.rightLeg = this.buildLeg(1, pantsMat, sneakerSoleMat, sneakerUpperMat);
     this.group.add(this.leftLeg);
     this.group.add(this.rightLeg);
 
-    // Soft grounded contact shadow
-    const shadowGeo = new THREE.CircleGeometry(0.5, 20);
+    // Dynamic contact shadow
+    const shadowGeo = new THREE.CircleGeometry(0.52, 20);
     const shadowMat = new THREE.MeshBasicMaterial({
       color: 0x000000,
       transparent: true,
-      opacity: 0.35
+      opacity: 0.38
     });
     this.shadowBlob = new THREE.Mesh(shadowGeo, shadowMat);
     this.shadowBlob.rotation.x = -Math.PI / 2;
@@ -148,7 +151,6 @@ export class PlayerController {
     legMesh.castShadow = true;
     legGroup.add(legMesh);
 
-    // Clean White Low-Top Leather Sneaker
     const shoe = new THREE.Group();
     shoe.position.set(0, -0.88, 0.06);
 
@@ -207,11 +209,9 @@ export class PlayerController {
           this.keys.backward = false;
           break;
         case 'KeyA':
-        case 'ArrowLeft':
           this.keys.left = false;
           break;
         case 'KeyD':
-        case 'ArrowRight':
           this.keys.right = false;
           break;
         case 'Space':
@@ -253,7 +253,7 @@ export class PlayerController {
     });
 
     this.domElement.addEventListener('wheel', (e) => {
-      this.camDistance = Math.max(2.4, Math.min(8.5, this.camDistance + e.deltaY * 0.005));
+      this.targetCamDistance = Math.max(2.4, Math.min(8.5, this.targetCamDistance + e.deltaY * 0.005));
     }, { passive: true });
   }
 
@@ -281,9 +281,11 @@ export class PlayerController {
       this.velocity.z *= 0.75;
     }
 
+    // Jump
     if (this.keys.jump && this.isGrounded) {
       this.velocity.y = this.jumpForce;
       this.isGrounded = false;
+      soundEngine.playJump();
     }
 
     if (!this.isGrounded) {
@@ -324,10 +326,15 @@ export class PlayerController {
     this.position.x = allowedX;
     this.position.z = allowedZ;
 
+    // Ground check & Land sound
+    this.wasGrounded = this.isGrounded;
     if (nextY <= 0) {
       this.position.y = 0;
       this.velocity.y = 0;
       this.isGrounded = true;
+      if (!this.wasGrounded) {
+        soundEngine.playLand();
+      }
     } else {
       this.position.y = nextY;
     }
@@ -341,7 +348,7 @@ export class PlayerController {
     this.group.rotation.y = this.rotation;
     this.shadowBlob.position.set(this.position.x, 0.015, this.position.z);
 
-    // Natural walk kinematics
+    // Natural walk kinematics & Footstep sound synchronization
     if (isMoving && this.isGrounded) {
       this.walkCycle += dt * speed * 2.5;
       const armSwing = Math.sin(this.walkCycle) * 0.6;
@@ -355,6 +362,13 @@ export class PlayerController {
       this.torso.position.y = 1.35 + Math.abs(Math.sin(this.walkCycle * 2)) * 0.04;
       this.head.position.y = 1.98 + Math.abs(Math.sin(this.walkCycle * 2)) * 0.03;
       this.torso.rotation.z = Math.sin(this.walkCycle) * 0.03;
+
+      // Footstep sound trigger when foot reaches lowest arc
+      const currentStep = Math.floor(this.walkCycle / Math.PI);
+      if (currentStep !== this.lastFootstepStep) {
+        this.lastFootstepStep = currentStep;
+        soundEngine.playFootstep('wood');
+      }
     } else {
       const breath = Math.sin(performance.now() * 0.003) * 0.015;
       this.leftArm.rotation.x = THREE.MathUtils.lerp(this.leftArm.rotation.x, 0, 0.15);
@@ -370,6 +384,7 @@ export class PlayerController {
   }
 
   updateCamera() {
+    this.camDistance = THREE.MathUtils.lerp(this.camDistance, this.targetCamDistance, 0.1);
     const targetLook = this.position.clone().add(new THREE.Vector3(0, 1.45, 0));
 
     const camOffset = new THREE.Vector3(
@@ -379,7 +394,13 @@ export class PlayerController {
     );
 
     const desiredCamPos = this.position.clone().add(camOffset);
-    this.camera.position.lerp(desiredCamPos, 0.1);
+
+    // Camera wall collision prevention (clamp inside bounds)
+    desiredCamPos.x = Math.max(-13.2, Math.min(13.2, desiredCamPos.x));
+    desiredCamPos.z = Math.max(-13.2, Math.min(13.2, desiredCamPos.z));
+    desiredCamPos.y = Math.max(0.6, Math.min(7.2, desiredCamPos.y));
+
+    this.camera.position.lerp(desiredCamPos, 0.12);
     this.camera.lookAt(targetLook);
   }
 }

@@ -107,6 +107,11 @@ window.addEventListener('DOMContentLoaded', () => {
         ui.showToast('Relaxed on the living room sofa');
         break;
 
+      case 'bed':
+        soundEngine.playChime();
+        ui.showToast('Rested comfortably on the platform bed');
+        break;
+
       case 'window':
         const mode = sceneMgr.cycleEnvironment();
         soundEngine.playChime();

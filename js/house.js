@@ -1,7 +1,12 @@
 /**
- * Cozy Scandinavian & Contemporary Home Environment for HyFly-4
- * Warm natural aesthetic: Light Oak, Cream Linen, White Quartz, Warm 2700K Lighting.
- * Completely free of cyber / sci-fi styling.
+ * Architectural Scandinavian & Japandi 3D Residence for HyFly-4
+ * Enhanced Multi-Room Interior:
+ * 1. Creative Studio & Workstation
+ * 2. Scandinavian Living Room with Fireplace & OLED TV
+ * 3. Modern Kitchen with Refrigerator & Gas Cooktop
+ * 4. Cozy Master Bedroom with Platform Bed
+ * 5. Architectural Ceiling Fans, Framed Wall Art & Contact Shadows
+ * 6. Central Feature Wall with 3D Brass Typography "XIANLY RUNA"
  */
 import * as THREE from 'three';
 import { create3DNameBanner } from './text3d.js';
@@ -18,8 +23,11 @@ export class HouseBuilder {
     this.oakWoodTex = TextureGenerator.createNaturalWoodDesk();
     this.quartzTex = TextureGenerator.createQuartzCounter();
     this.linenTex = TextureGenerator.createLinenFabric();
+    this.artTex1 = TextureGenerator.createAbstractArt(1);
+    this.artTex2 = TextureGenerator.createAbstractArt(2);
+    this.shadowTex = TextureGenerator.createFloorContactShadow();
 
-    // Appliance & Light states
+    // Appliance, Water & Fan states
     this.lampLight = null;
     this.lampBulb = null;
     this.lampState = true;
@@ -41,8 +49,13 @@ export class HouseBuilder {
     this.stoveFlameMesh = null;
     this.stoveState = false;
 
-    this.radioSpeakerLeft = null;
-    this.radioSpeakerRight = null;
+    this.waterStream = null;
+    this.waterRunning = false;
+
+    this.ceilingFan1 = null;
+    this.ceilingFan2 = null;
+
+    this.radioSpeaker = null;
     this.steamParticles = null;
 
     this.screenCanvas = null;
@@ -55,7 +68,10 @@ export class HouseBuilder {
     this.buildStudioZone();
     this.buildLivingRoomZone();
     this.buildKitchenZone();
+    this.buildBedroomZone();
     this.buildNameBannerZone();
+    this.buildCeilingFans();
+    this.buildFramedArtwork();
     return {
       interactive: this.interactiveObjects,
       colliders: this.colliders
@@ -72,8 +88,22 @@ export class HouseBuilder {
     this.colliders.push(box);
   }
 
+  addContactShadow(x, z, width, length, opacity = 0.35) {
+    const shadowGeo = new THREE.PlaneGeometry(width, length);
+    const shadowMat = new THREE.MeshBasicMaterial({
+      map: this.shadowTex,
+      transparent: true,
+      opacity: opacity,
+      depthWrite: false
+    });
+    const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.set(x, 0.012, z);
+    this.scene.add(shadow);
+  }
+
   /* =========================================================================
-     ARCHITECTURE (WARM SCANDINAVIAN INTERIOR)
+     ARCHITECTURE (SCANDINAVIAN STRUCTURE)
      ========================================================================= */
   buildHouseArchitecture() {
     // 1. Natural Light Oak Floor
@@ -88,13 +118,13 @@ export class HouseBuilder {
     floor.receiveShadow = true;
     this.scene.add(floor);
 
-    // 2. Warm Off-White / Natural Greige Plaster Walls
+    // 2. Warm Off-White / Greige Plaster Walls
     const wallMat = new THREE.MeshStandardMaterial({
-      color: 0xe8e2d8, // Warm cozy greige
+      color: 0xe8e2d8,
       roughness: 0.9
     });
     const oakTrimMat = new THREE.MeshStandardMaterial({
-      color: 0x9c7d58, // Warm oak trim
+      color: 0x9c7d58,
       roughness: 0.6
     });
 
@@ -128,7 +158,7 @@ export class HouseBuilder {
     bbN.position.set(0, 0.14, -13.78);
     this.scene.add(bbN);
 
-    // Interior Partitions
+    // Interior Partition Walls
     const part1 = new THREE.Mesh(new THREE.BoxGeometry(10.5, 7.5, 0.35), wallMat);
     part1.position.set(-8.75, 3.75, 0);
     this.scene.add(part1);
@@ -144,14 +174,16 @@ export class HouseBuilder {
     this.scene.add(partSouth);
     this.addCollider(partSouth);
 
-    // Floor-to-Ceiling Windows
+    // Architectural Windows
     this.buildWarmWindow(-7, 4.8, -13.8);
     this.buildWarmWindow(7, 4.8, -13.8);
+    this.buildWarmWindow(13.8, 4.8, 7.0, true);
   }
 
-  buildWarmWindow(x, y, z) {
+  buildWarmWindow(x, y, z, rotateY = false) {
     const win = new THREE.Group();
     win.position.set(x, y, z);
+    if (rotateY) win.rotation.y = -Math.PI / 2;
 
     const woodFrameMat = new THREE.MeshStandardMaterial({ color: 0x2d241e, roughness: 0.5 });
     const frame = new THREE.Mesh(new THREE.BoxGeometry(4.8, 4.5, 0.2), woodFrameMat);
@@ -179,11 +211,13 @@ export class HouseBuilder {
   }
 
   /* =========================================================================
-     ZONE 1: WORKSTATION & CREATIVE STUDIO
+     ZONE 1: WORKSTATION / CREATIVE STUDIO (NW)
      ========================================================================= */
   buildStudioZone() {
     const zX = -7.0;
     const zZ = -7.0;
+
+    this.addContactShadow(zX, zZ, 6.0, 3.2, 0.4);
 
     // Natural Solid Oak Desk
     const deskGroup = new THREE.Group();
@@ -198,7 +232,6 @@ export class HouseBuilder {
     top.castShadow = true;
     deskGroup.add(top);
 
-    // Minimalist Round Matte Black Steel Legs
     const legMat = new THREE.MeshStandardMaterial({ color: 0x1f242d, roughness: 0.4, metalness: 0.7 });
     for (const [lx, lz] of [[-2.4, -1.0], [2.4, -1.0], [-2.4, 1.0], [2.4, 1.0]]) {
       const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.035, 2.76, 16), legMat);
@@ -209,25 +242,12 @@ export class HouseBuilder {
     this.scene.add(deskGroup);
     this.addCollider(deskGroup);
 
-    // Clean Minimalist Monitor (Silver Aluminum Frame)
     this.buildMinimalistMonitor(zX, 2.93, zZ - 0.4);
-
-    // Minimalist Aluminum Keyboard & Mouse
     this.buildMinimalKeyboard(zX - 0.2, 2.93, zZ + 0.35);
-
-    // Warm Pleated Fabric Desk Lamp (Japanese Akari / Scandi Style)
     this.buildWarmDeskLamp(zX - 2.0, 2.93, zZ - 0.3);
-
-    // Vintage Wooden Tabletop Radio
     this.buildVintageWoodRadio(zX - 1.8, 2.93, zZ + 0.6);
-
-    // Steaming Ceramic Mug on Cork Coaster
     this.buildCoffeeMug(zX + 1.4, 2.93, zZ + 0.5);
-
-    // Potted Houseplant (Fiddle Leaf / Monstera)
     this.buildIndoorPlant(zX + 2.0, 2.93, zZ - 0.4);
-
-    // Solid Oak Bookshelves
     this.buildOakBookshelves(zX, 5.2, -13.7);
   }
 
@@ -237,7 +257,6 @@ export class HouseBuilder {
 
     const silverMat = new THREE.MeshStandardMaterial({ color: 0xd4d8de, metalness: 0.85, roughness: 0.25 });
 
-    // Sleek single-arm stand
     const base = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.02, 0.55), silverMat);
     base.position.y = 0.01;
     pcGroup.add(base);
@@ -247,7 +266,6 @@ export class HouseBuilder {
     stem.rotation.x = -0.06;
     pcGroup.add(stem);
 
-    // Minimalist Display
     const bezelMat = new THREE.MeshStandardMaterial({ color: 0x1f242d, roughness: 0.4 });
     const screenFrame = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.6, 0.06), bezelMat);
     screenFrame.position.set(0, 1.25, 0);
@@ -277,14 +295,12 @@ export class HouseBuilder {
     const kb = new THREE.Group();
     kb.position.set(x, y, z);
 
-    // Wool felt desk mat
     const feltMat = new THREE.MeshStandardMaterial({ color: 0x3e3a36, roughness: 0.9 });
     const mat = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.015, 1.1), feltMat);
     mat.position.y = 0.008;
     mat.receiveShadow = true;
     kb.add(mat);
 
-    // Clean silver aluminum keyboard
     const silverMat = new THREE.MeshStandardMaterial({ color: 0xd8dce2, metalness: 0.8, roughness: 0.3 });
     const body = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.03, 0.44), silverMat);
     body.position.set(0, 0.025, 0);
@@ -312,7 +328,6 @@ export class HouseBuilder {
     stem.position.set(0, 0.58, 0);
     lamp.add(stem);
 
-    // Warm pleated cylinder shade
     const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.4, 0.55, 20), paperMat);
     shade.position.y = 1.15;
     lamp.add(shade);
@@ -321,7 +336,6 @@ export class HouseBuilder {
     this.lampBulb.position.y = 1.15;
     lamp.add(this.lampBulb);
 
-    // Soft warm incandescent light (2700K golden warmth)
     this.lampLight = new THREE.PointLight(0xffecd2, 1.8, 6.5, 1.4);
     this.lampLight.position.set(0, 1.15, 0);
     this.lampLight.castShadow = true;
@@ -357,13 +371,12 @@ export class HouseBuilder {
     brassDial.position.set(0.24, 0.28, 0.16);
     radio.add(brassDial);
 
-    this.radioSpeakerLeft = cloth;
-    this.radioSpeakerRight = cloth;
+    this.radioSpeaker = cloth;
 
     radio.userData = {
       interactive: true,
       name: 'radio',
-      label: 'Acoustic Wood Radio (Press [E]: Toggle Chill Music)'
+      label: 'Acoustic Wood Radio (Press [E]: Toggle Music)'
     };
     this.interactiveObjects.push(radio);
     this.scene.add(radio);
@@ -398,7 +411,7 @@ export class HouseBuilder {
     mugGroup.userData = {
       interactive: true,
       name: 'coffee',
-      label: 'Ceramic Espresso Mug (Press [E]: Take a Sip)'
+      label: 'Espresso Mug (Press [E]: Take a Sip)'
     };
     this.interactiveObjects.push(mugGroup);
     this.scene.add(mugGroup);
@@ -408,12 +421,12 @@ export class HouseBuilder {
     const plant = new THREE.Group();
     plant.position.set(x, y, z);
 
-    const potMat = new THREE.MeshStandardMaterial({ color: 0xc47b59, roughness: 0.8 }); // Terracotta
+    const potMat = new THREE.MeshStandardMaterial({ color: 0xc47b59, roughness: 0.8 });
     const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.35, 16), potMat);
     pot.position.y = 0.175;
     plant.add(pot);
 
-    const leafMat = new THREE.MeshStandardMaterial({ color: 0x3d6647, roughness: 0.5 }); // Natural Monstera Green
+    const leafMat = new THREE.MeshStandardMaterial({ color: 0x3d6647, roughness: 0.5 });
     for (let i = 0; i < 7; i++) {
       const angle = (i / 7) * Math.PI * 2;
       const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), leafMat);
@@ -445,13 +458,14 @@ export class HouseBuilder {
   }
 
   /* =========================================================================
-     ZONE 2: COZY SCANDINAVIAN LIVING ROOM
+     ZONE 2: SCANDINAVIAN LIVING ROOM (NE)
      ========================================================================= */
   buildLivingRoomZone() {
     const zX = 7.0;
     const zZ = -5.0;
 
-    // Cozy Woven Wool Rug
+    this.addContactShadow(zX, zZ, 8.0, 7.0, 0.35);
+
     const rug = new THREE.Mesh(
       new THREE.BoxGeometry(7.5, 0.02, 6.5),
       new THREE.MeshStandardMaterial({ color: 0xd6ccc2, roughness: 0.95 })
@@ -459,7 +473,6 @@ export class HouseBuilder {
     rug.position.set(zX, 0.01, zZ);
     this.scene.add(rug);
 
-    // Warm Oatmeal Bouclé Sectional Sofa
     const sofa = new THREE.Group();
     sofa.position.set(zX, 0, zZ - 1.2);
 
@@ -481,7 +494,6 @@ export class HouseBuilder {
     chaise.position.set(-1.7, 0.25, 1.35);
     sofa.add(chaise);
 
-    // Warm earth-tone accent pillows
     const pillowMat = new THREE.MeshStandardMaterial({ color: 0x937860, roughness: 0.8 });
     for (let i = 0; i < 3; i++) {
       const c = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.2, 1.2), pillowMat);
@@ -489,7 +501,6 @@ export class HouseBuilder {
       sofa.add(c);
     }
 
-    // Natural Oak Tapered Legs
     for (const [lx, lz] of [[-2.4, -0.8], [2.4, -0.8], [-2.4, 1.8], [2.4, 0.8]]) {
       const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.025, 0.25, 10), woodLegMat);
       leg.position.set(lx, 0.12, lz);
@@ -526,13 +537,8 @@ export class HouseBuilder {
     this.scene.add(table);
     this.addCollider(table);
 
-    // OLED Smart TV on Oak Media Credenza
     this.buildOledMediaConsole(13.6, 0, zZ);
-
-    // Japanese Akari Paper Lantern Floor Lamp
     this.buildPaperFloorLamp(zX - 2.8, 0, zZ - 2.2);
-
-    // Natural Limestone Hearth Fireplace
     this.buildNaturalFireplace(13.4, 0, -11.0);
   }
 
@@ -541,14 +547,12 @@ export class HouseBuilder {
     tvGroup.position.set(x, y, z);
     tvGroup.rotation.y = -Math.PI / 2;
 
-    // Oak Media Credenza / TV Cabinet
     const oakMat = new THREE.MeshStandardMaterial({ map: this.oakWoodTex, roughness: 0.45 });
     const credenza = new THREE.Mesh(new THREE.BoxGeometry(5.6, 1.1, 1.4), oakMat);
     credenza.position.y = 0.55;
     credenza.castShadow = true;
     tvGroup.add(credenza);
 
-    // OLED TV mounted above
     const bezelMat = new THREE.MeshStandardMaterial({ color: 0x1f242d, roughness: 0.4 });
     const tvFrame = new THREE.Mesh(new THREE.BoxGeometry(4.8, 2.7, 0.08), bezelMat);
     tvFrame.position.set(0, 3.2, 0);
@@ -584,7 +588,6 @@ export class HouseBuilder {
     const wireMat = new THREE.MeshStandardMaterial({ color: 0x1f242d, metalness: 0.7 });
     const paperMat = new THREE.MeshStandardMaterial({ color: 0xfffcf5, roughness: 0.85 });
 
-    // Minimalist tripod wire legs
     for (let i = 0; i < 3; i++) {
       const a = (i / 3) * Math.PI * 2;
       const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 3.8, 8), wireMat);
@@ -592,7 +595,6 @@ export class HouseBuilder {
       lamp.add(leg);
     }
 
-    // Organic Japanese paper lantern shade
     const shade = new THREE.Mesh(new THREE.SphereGeometry(0.65, 20, 20), paperMat);
     shade.scale.set(1.0, 1.25, 1.0);
     shade.position.y = 3.8;
@@ -617,7 +619,7 @@ export class HouseBuilder {
     fp.position.set(x, y, z);
     fp.rotation.y = -Math.PI / 2;
 
-    const stoneMat = new THREE.MeshStandardMaterial({ color: 0xdcd5ca, roughness: 0.85 }); // Warm limestone
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0xdcd5ca, roughness: 0.85 });
     const mantle = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.0, 1.2), stoneMat);
     mantle.position.y = 1.0;
     fp.add(mantle);
@@ -635,13 +637,14 @@ export class HouseBuilder {
   }
 
   /* =========================================================================
-     ZONE 3: KITCHEN & DINING
+     ZONE 3: KITCHEN & DINING (SW)
      ========================================================================= */
   buildKitchenZone() {
     const zX = -7.0;
     const zZ = 7.0;
 
-    // Kitchen Island with White Quartz Top & Oak Base
+    this.addContactShadow(zX, zZ, 6.2, 3.2, 0.4);
+
     const island = new THREE.Group();
     island.position.set(zX, 0, zZ);
 
@@ -661,7 +664,6 @@ export class HouseBuilder {
     top.castShadow = true;
     island.add(top);
 
-    // Matte Black Faucet & Under-mount Sink
     const blackSteel = new THREE.MeshStandardMaterial({ color: 0x1a1d24, roughness: 0.3 });
     const sink = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.02, 0.95), blackSteel);
     sink.position.set(-1.4, 2.82, 0);
@@ -672,7 +674,19 @@ export class HouseBuilder {
     faucet.rotation.z = Math.PI;
     island.add(faucet);
 
-    // Clean Gas Stove Range
+    // Interactive running water jet
+    const waterMat = new THREE.MeshPhysicalMaterial({
+      color: 0x93c5fd,
+      transparent: true,
+      opacity: 0.6,
+      transmission: 0.8,
+      roughness: 0.1
+    });
+    this.waterStream = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.35, 8), waterMat);
+    this.waterStream.position.set(-1.4, 2.95, -0.08);
+    this.waterStream.visible = false;
+    island.add(this.waterStream);
+
     const stove = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.03, 1.0), blackSteel);
     stove.position.set(1.3, 2.83, 0);
     island.add(stove);
@@ -705,10 +719,8 @@ export class HouseBuilder {
     this.scene.add(island);
     this.addCollider(island);
 
-    // Matte White / Stainless Refrigerator
     this.buildModernRefrigerator(zX - 5.5, 0, zZ);
 
-    // Natural Wood Counter Stools
     for (let i = 0; i < 3; i++) {
       this.buildWoodCounterStool(zX - 1.6 + i * 1.6, 0, zZ + 1.9);
     }
@@ -719,7 +731,7 @@ export class HouseBuilder {
     fridge.position.set(x, y, z);
 
     const matteWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf1efe9, roughness: 0.35 });
-    const handleMat = new THREE.MeshStandardMaterial({ color: 0x9c7d58, roughness: 0.5 }); // Oak wood handle
+    const handleMat = new THREE.MeshStandardMaterial({ color: 0x9c7d58, roughness: 0.5 });
 
     const body = new THREE.Mesh(new THREE.BoxGeometry(1.9, 5.4, 1.9), matteWhiteMat);
     body.position.y = 2.7;
@@ -768,7 +780,6 @@ export class HouseBuilder {
     ring.position.y = 0.65;
     stool.add(ring);
 
-    // Natural curved oak seat
     const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.38, 0.12, 20), oakMat);
     seat.position.y = 1.76;
     stool.add(seat);
@@ -778,7 +789,159 @@ export class HouseBuilder {
   }
 
   /* =========================================================================
-     ZONE 4: ARCHITECTURAL GALLERY BANNER "XIANLY RUNA"
+     ZONE 4: MASTER BEDROOM NOOK (SE)
+     ========================================================================= */
+  buildBedroomZone() {
+    const zX = 7.0;
+    const zZ = 7.0;
+
+    this.addContactShadow(zX, zZ, 6.5, 6.0, 0.4);
+
+    // Platform Oak Bed
+    const bedGroup = new THREE.Group();
+    bedGroup.position.set(zX, 0, zZ);
+
+    const oakMat = new THREE.MeshStandardMaterial({ map: this.oakWoodTex, roughness: 0.5 });
+    const mattressMat = new THREE.MeshStandardMaterial({ color: 0xfbf9f5, roughness: 0.8 });
+    const duvetMat = new THREE.MeshStandardMaterial({ map: this.linenTex, roughness: 0.9 });
+    const pillowMat = new THREE.MeshStandardMaterial({ color: 0xd6ccc2, roughness: 0.85 });
+
+    // Platform base
+    const bedBase = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.45, 4.8), oakMat);
+    bedBase.position.y = 0.225;
+    bedBase.castShadow = true;
+    bedGroup.add(bedBase);
+
+    // Headboard
+    const headboard = new THREE.Mesh(new THREE.BoxGeometry(4.4, 2.0, 0.25), oakMat);
+    headboard.position.set(0, 1.0, 2.3);
+    bedGroup.add(headboard);
+
+    // Thick mattress
+    const mattress = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.55, 4.2), mattressMat);
+    mattress.position.set(0, 0.725, -0.15);
+    bedGroup.add(mattress);
+
+    // Cozy folded duvet
+    const duvet = new THREE.Mesh(new THREE.BoxGeometry(4.1, 0.22, 3.2), duvetMat);
+    duvet.position.set(0, 1.05, -0.6);
+    bedGroup.add(duvet);
+
+    // Sleeping pillows
+    for (let i = 0; i < 2; i++) {
+      const pillow = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.25, 0.9), pillowMat);
+      pillow.position.set(-1.1 + i * 2.2, 1.08, 1.4);
+      pillow.rotation.x = -0.15;
+      bedGroup.add(pillow);
+    }
+
+    bedGroup.userData = {
+      interactive: true,
+      name: 'bed',
+      label: 'Platform Bed (Press [E]: Lie Down & Rest)'
+    };
+    this.interactiveObjects.push(bedGroup);
+    this.scene.add(bedGroup);
+    this.addCollider(bedGroup);
+
+    // Nightstands on each side
+    for (const side of [-1, 1]) {
+      const stand = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.75, 1.0), oakMat);
+      stand.position.set(zX + side * 2.8, 0.375, zZ + 1.8);
+      this.scene.add(stand);
+      this.addCollider(stand);
+
+      // Nightstand lamp
+      const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.04, 16), oakMat);
+      lampBase.position.set(zX + side * 2.8, 0.77, zZ + 1.8);
+      this.scene.add(lampBase);
+
+      const lampShade = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.25, 0.35, 16),
+        new THREE.MeshStandardMaterial({ color: 0xfffcf5, roughness: 0.85 })
+      );
+      lampShade.position.set(zX + side * 2.8, 1.05, zZ + 1.8);
+      this.scene.add(lampShade);
+
+      const nightLight = new THREE.PointLight(0xfff0dd, 0.8, 4.5);
+      nightLight.position.set(zX + side * 2.8, 1.05, zZ + 1.8);
+      this.scene.add(nightLight);
+    }
+  }
+
+  /* =========================================================================
+     ZONE 5: CEILING FANS & FRAMED ARTWORK
+     ========================================================================= */
+  buildCeilingFans() {
+    this.ceilingFan1 = this.createCeilingFan(-7.0, 6.8, -7.0); // Studio
+    this.ceilingFan2 = this.createCeilingFan(7.0, 6.8, -5.0);  // Living Room
+    this.scene.add(this.ceilingFan1);
+    this.scene.add(this.ceilingFan2);
+  }
+
+  createCeilingFan(x, y, z) {
+    const fan = new THREE.Group();
+    fan.position.set(x, y, z);
+
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0x1f242d, roughness: 0.4 });
+    const woodBladeMat = new THREE.MeshStandardMaterial({ map: this.oakWoodTex, roughness: 0.5 });
+
+    // Downrod
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.7, 8), metalMat);
+    rod.position.y = -0.35;
+    fan.add(rod);
+
+    // Motor Hub
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.16, 20), metalMat);
+    hub.position.y = -0.75;
+    fan.add(hub);
+
+    // Rotating Blades Group
+    const bladesGroup = new THREE.Group();
+    bladesGroup.position.y = -0.75;
+
+    for (let i = 0; i < 3; i++) {
+      const angle = (i / 3) * Math.PI * 2;
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.02, 0.28), woodBladeMat);
+      blade.position.set(Math.cos(angle) * 0.95, 0, Math.sin(angle) * 0.95);
+      blade.rotation.y = -angle;
+      blade.rotation.x = 0.12;
+      bladesGroup.add(blade);
+    }
+
+    fan.add(bladesGroup);
+    fan.blades = bladesGroup;
+    return fan;
+  }
+
+  buildFramedArtwork() {
+    // Gallery Wall Art Piece 1 (Living room wall)
+    this.createFramedPainting(9.5, 4.5, -13.72, 2.6, 3.4, this.artTex1);
+
+    // Gallery Wall Art Piece 2 (Corridor entrance)
+    this.createFramedPainting(-2.5, 4.5, -0.22, 2.2, 3.0, this.artTex2);
+  }
+
+  createFramedPainting(x, y, z, width, height, texture) {
+    const frameGroup = new THREE.Group();
+    frameGroup.position.set(x, y, z);
+
+    const oakMat = new THREE.MeshStandardMaterial({ color: 0x785a3c, roughness: 0.4 });
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(width + 0.16, height + 0.16, 0.08), oakMat);
+    frameGroup.add(frame);
+
+    const canvasMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(width, height),
+      new THREE.MeshBasicMaterial({ map: texture })
+    );
+    canvasMesh.position.z = 0.045;
+    frameGroup.add(canvasMesh);
+
+    this.scene.add(frameGroup);
+  }
+
+  /* =========================================================================
+     ZONE 6: ARCHITECTURAL GALLERY BANNER "XIANLY RUNA"
      ========================================================================= */
   buildNameBannerZone() {
     const banner = create3DNameBanner("XIANLY RUNA", new THREE.Vector3(0.24, 4.9, 0));
@@ -820,13 +983,18 @@ export class HouseBuilder {
     return this.stoveState;
   }
 
+  toggleSinkWater() {
+    this.waterRunning = !this.waterRunning;
+    if (this.waterStream) this.waterStream.visible = this.waterRunning;
+    return this.waterRunning;
+  }
+
   updateScreenCanvas(time) {
     if (!this.screenCtx) return;
     const ctx = this.screenCtx;
     const w = this.screenCanvas.width;
     const h = this.screenCanvas.height;
 
-    // Clean modern warm dark mode
     ctx.fillStyle = '#1e1b18';
     ctx.fillRect(0, 0, w, h);
 
@@ -841,9 +1009,9 @@ export class HouseBuilder {
     const lines = [
       `System: Architectural Studio Workstation`,
       `Ambient Mode: Scandinavian Warm Contemporary`,
-      `Design Language: Minimalist Oak & Stone`,
+      `Design Language: Natural Oak, Quartz & Linen`,
       `Active Audio: Lo-Fi Generative Chords`,
-      `Location: Central Creative Pavilion`,
+      `Residence: Central Creative Pavilion`,
       `>> Press [E] or Click to open Terminal & Notepad.`
     ];
 
@@ -865,15 +1033,13 @@ export class HouseBuilder {
     const h = this.tvCanvas.height;
 
     if (this.tvChannel === 0) {
-      // Channel 01: Relaxing Scenic Nature Stream
       const grad = ctx.createLinearGradient(0, 0, 0, h);
-      grad.addColorStop(0, '#fde68a'); // Warm golden sunset
+      grad.addColorStop(0, '#fde68a');
       grad.addColorStop(0.5, '#fb923c');
       grad.addColorStop(1, '#a16207');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
 
-      // Sun
       ctx.fillStyle = '#fffbeb';
       ctx.beginPath();
       ctx.arc(w / 2, h * 0.45, 100, 0, Math.PI * 2);
@@ -883,7 +1049,6 @@ export class HouseBuilder {
       ctx.font = '500 24px sans-serif';
       ctx.fillText('NATURE LOUNGE // GOLDEN HOUR SCENIC STREAM', 32, 50);
     } else {
-      // Channel 02: Architecture & Interior Design Showcase
       ctx.fillStyle = '#1c1917';
       ctx.fillRect(0, 0, w, h);
 
@@ -905,6 +1070,10 @@ export class HouseBuilder {
   update(time, audioPlaying) {
     this.updateScreenCanvas(time);
     this.updateTVCanvas(time);
+
+    // Ceiling fans rotation
+    if (this.ceilingFan1?.blades) this.ceilingFan1.blades.rotation.y = time * 2.8;
+    if (this.ceilingFan2?.blades) this.ceilingFan2.blades.rotation.y = time * 2.8;
 
     // Steam particles
     if (this.steamParticles) {
@@ -928,6 +1097,11 @@ export class HouseBuilder {
     // Stove flame flicker
     if (this.stoveState && this.stoveFlameMesh) {
       this.stoveFlameMesh.scale.y = 1 + Math.sin(time * 30) * 0.25;
+    }
+
+    // Water flow animation
+    if (this.waterRunning && this.waterStream) {
+      this.waterStream.scale.x = 1 + Math.sin(time * 20) * 0.15;
     }
   }
 }

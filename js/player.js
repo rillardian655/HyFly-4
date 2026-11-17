@@ -2,7 +2,8 @@
  * Elaina (Wandering Witch / Majo no Tabitabi) Character Controller
  * Loads the authentic PC model from the original asset package (Elaina (VRChat).fbx),
  * official Wand.fbx, official Broom.fbx, and 2K/4K cel-shaded textures.
- * Features fluid locomotion kinematics (stride bobbing, body lean, turn banking, idle breathing),
+ * Features fluid locomotion kinematics (dynamic arm swinging, elbow flexion,
+ * leg steps, knee bending, stride bobbing, forward lean, turn banking, idle breathing),
  * synchronized wooden footstep audio, jump physics, and third-person camera.
  */
 import * as THREE from 'three';
@@ -60,7 +61,15 @@ export class PlayerController {
     this.wandMesh = null;
     this.broomMesh = null;
     this.baseModelY = 0;
+    this.bones = {};
+    this.initBoneRotations = {};
     this.isLoaded = false;
+
+    // Kinematic Animation & Emote State
+    this.currentEmote = null; // 'wave' | 'cast' | null
+    this.emoteTimer = 0;
+    this.isFlying = false;
+    this.flightHoverY = 1.4;
 
     // Contact shadow
     const shadowGeo = new THREE.CircleGeometry(0.55, 20);
@@ -234,6 +243,16 @@ export class PlayerController {
               child.material = applyMat(child.material);
             }
           }
+
+          // Capture the root bone for each joint (avoids 5x multiplier distortions)
+          if (child.isBone && !this.bones[child.name]) {
+            this.bones[child.name] = child;
+            this.initBoneRotations[child.name] = {
+              x: child.rotation.x,
+              y: child.rotation.y,
+              z: child.rotation.z
+            };
+          }
         });
 
         // 2. Load the official Wand.fbx from author's zip
@@ -342,6 +361,12 @@ export class PlayerController {
         e.preventDefault();
       } else if (code === 'ShiftLeft' || code === 'ShiftRight') {
         this.keys.sprint = true;
+      } else if (code === 'Digit1') {
+        this.playEmote('wave');
+      } else if (code === 'Digit2') {
+        this.playEmote('cast');
+      } else if (code === 'Digit3' || code === 'KeyF') {
+        this.toggleFlight();
       }
     });
 
@@ -441,6 +466,32 @@ export class PlayerController {
     }, { passive: true });
   }
 
+  playEmote(type) {
+    if (this.currentEmote === type) {
+      this.currentEmote = null;
+      return;
+    }
+    this.currentEmote = type;
+    this.emoteTimer = (type === 'wave') ? 3.2 : 3.5;
+    soundEngine.playChime();
+  }
+
+  toggleFlight() {
+    this.isFlying = !this.isFlying;
+    soundEngine.playChime();
+    if (this.isFlying) {
+      this.position.y = Math.max(1.2, this.position.y);
+      this.velocity.set(0, 0, 0);
+      this.isGrounded = false;
+    } else {
+      this.velocity.set(0, 0, 0);
+      if (this.broomMesh) {
+        this.broomMesh.position.set(-0.16, 0.95, -0.16);
+        this.broomMesh.rotation.set(0.38, 0.25, 0.82);
+      }
+    }
+  }
+
   update(dt) {
     const moveZ = (this.keys.forward ? 1 : 0) - (this.keys.backward ? 1 : 0);
     const moveX = (this.keys.right ? 1 : 0) - (this.keys.left ? 1 : 0);
@@ -448,79 +499,114 @@ export class PlayerController {
 
     const speed = this.keys.sprint ? this.sprintSpeed : this.walkSpeed;
 
-    if (isMoving) {
-      const forward = new THREE.Vector3(-Math.sin(this.camAngleX), 0, -Math.cos(this.camAngleX));
-      const right = new THREE.Vector3(-forward.z, 0, forward.x);
+    if (this.isFlying) {
+      const flySpeed = this.keys.sprint ? 9.5 : 5.8;
+      if (isMoving) {
+        const forward = new THREE.Vector3(-Math.sin(this.camAngleX), 0, -Math.cos(this.camAngleX));
+        const right = new THREE.Vector3(-forward.z, 0, forward.x);
 
-      const moveDir = new THREE.Vector3()
-        .addScaledVector(forward, moveZ)
-        .addScaledVector(right, moveX)
-        .normalize();
+        const moveDir = new THREE.Vector3()
+          .addScaledVector(forward, moveZ)
+          .addScaledVector(right, moveX)
+          .normalize();
 
-      this.velocity.x = moveDir.x * speed;
-      this.velocity.z = moveDir.z * speed;
-      this.targetRotation = Math.atan2(moveDir.x, moveDir.z);
-    } else {
-      this.velocity.x *= 0.75;
-      this.velocity.z *= 0.75;
-    }
+        this.velocity.x = moveDir.x * flySpeed;
+        this.velocity.z = moveDir.z * flySpeed;
+        this.targetRotation = Math.atan2(moveDir.x, moveDir.z);
+      } else {
+        this.velocity.x *= 0.85;
+        this.velocity.z *= 0.85;
+      }
 
-    // Jump
-    if (this.keys.jump && this.isGrounded) {
-      this.velocity.y = this.jumpForce;
+      if (this.keys.jump) {
+        this.velocity.y = 3.2;
+      } else if (this.keys.sprint) {
+        this.velocity.y = -2.5;
+      } else {
+        this.velocity.y *= 0.8;
+      }
+
+      const nextX = THREE.MathUtils.clamp(this.position.x + this.velocity.x * dt, -13.4, 13.4);
+      const nextZ = THREE.MathUtils.clamp(this.position.z + this.velocity.z * dt, -13.4, 13.4);
+      const nextY = THREE.MathUtils.clamp(this.position.y + this.velocity.y * dt, 0.6, 5.5);
+
+      this.position.set(nextX, nextY, nextZ);
       this.isGrounded = false;
-      soundEngine.playJump();
-    }
-
-    if (!this.isGrounded) {
-      this.velocity.y -= this.gravity * dt;
-    }
-
-    const nextX = this.position.x + this.velocity.x * dt;
-    const nextZ = this.position.z + this.velocity.z * dt;
-    const nextY = this.position.y + this.velocity.y * dt;
-
-    const pRadius = 0.42;
-    let allowedX = nextX;
-    let allowedZ = nextZ;
-
-    for (const box of this.colliders) {
-      if (
-        allowedX + pRadius > box.min.x &&
-        allowedX - pRadius < box.max.x &&
-        this.position.z + pRadius > box.min.z &&
-        this.position.z - pRadius < box.max.z
-      ) {
-        allowedX = this.position.x;
-      }
-
-      if (
-        allowedX + pRadius > box.min.x &&
-        allowedX - pRadius < box.max.x &&
-        allowedZ + pRadius > box.min.z &&
-        allowedZ - pRadius < box.max.z
-      ) {
-        allowedZ = this.position.z;
-      }
-    }
-
-    allowedX = Math.max(-13.4, Math.min(13.4, allowedX));
-    allowedZ = Math.max(-13.4, Math.min(13.4, allowedZ));
-
-    this.position.x = allowedX;
-    this.position.z = allowedZ;
-
-    // Ground check & Land sound
-    this.wasGrounded = this.isGrounded;
-    if (nextY <= 0) {
-      this.position.y = 0;
-      this.velocity.y = 0;
-      this.isGrounded = true;
-      if (!this.wasGrounded) {
-        soundEngine.playLand();
-      }
     } else {
-      this.position.y = nextY;
+      if (isMoving) {
+        const forward = new THREE.Vector3(-Math.sin(this.camAngleX), 0, -Math.cos(this.camAngleX));
+        const right = new THREE.Vector3(-forward.z, 0, forward.x);
+
+        const moveDir = new THREE.Vector3()
+          .addScaledVector(forward, moveZ)
+          .addScaledVector(right, moveX)
+          .normalize();
+
+        this.velocity.x = moveDir.x * speed;
+        this.velocity.z = moveDir.z * speed;
+        this.targetRotation = Math.atan2(moveDir.x, moveDir.z);
+      } else {
+        this.velocity.x *= 0.75;
+        this.velocity.z *= 0.75;
+      }
+
+      // Jump
+      if (this.keys.jump && this.isGrounded) {
+        this.velocity.y = this.jumpForce;
+        this.isGrounded = false;
+        soundEngine.playJump();
+      }
+
+      if (!this.isGrounded) {
+        this.velocity.y -= this.gravity * dt;
+      }
+
+      const nextX = this.position.x + this.velocity.x * dt;
+      const nextZ = this.position.z + this.velocity.z * dt;
+      const nextY = this.position.y + this.velocity.y * dt;
+
+      const pRadius = 0.42;
+      let allowedX = nextX;
+      let allowedZ = nextZ;
+
+      for (const box of this.colliders) {
+        if (
+          allowedX + pRadius > box.min.x &&
+          allowedX - pRadius < box.max.x &&
+          this.position.z + pRadius > box.min.z &&
+          this.position.z - pRadius < box.max.z
+        ) {
+          allowedX = this.position.x;
+        }
+
+        if (
+          allowedX + pRadius > box.min.x &&
+          allowedX - pRadius < box.max.x &&
+          allowedZ + pRadius > box.min.z &&
+          allowedZ - pRadius < box.max.z
+        ) {
+          allowedZ = this.position.z;
+        }
+      }
+
+      allowedX = Math.max(-13.4, Math.min(13.4, allowedX));
+      allowedZ = Math.max(-13.4, Math.min(13.4, allowedZ));
+
+      this.position.x = allowedX;
+      this.position.z = allowedZ;
+
+      // Ground check & Land sound
+      this.wasGrounded = this.isGrounded;
+      if (nextY <= 0) {
+        this.position.y = 0;
+        this.velocity.y = 0;
+        this.isGrounded = true;
+        if (!this.wasGrounded) {
+          soundEngine.playLand();
+        }
+      } else {
+        this.position.y = nextY;
+      }
     }
 
     // Smooth turning interpolation
@@ -533,7 +619,7 @@ export class PlayerController {
     this.group.rotation.y = this.rotation;
     this.shadowBlob.position.set(this.position.x, 0.015, this.position.z);
 
-    // Fluid locomotion kinematics & idle breathing
+    // Fluid locomotion kinematics & arm/leg animation
     this.updateLocomotion(isMoving, speed, dt, diff);
     this.updateCamera();
   }
@@ -541,16 +627,87 @@ export class PlayerController {
   updateLocomotion(isMoving, speed, dt, turnDiff) {
     const now = performance.now() * 0.001;
 
-    if (isMoving && this.isGrounded) {
-      this.walkCycle += dt * speed * 2.8;
+    // Tick emote timer
+    if (this.currentEmote) {
+      this.emoteTimer -= dt;
+      if (this.emoteTimer <= 0) {
+        this.currentEmote = null;
+      }
+    }
 
-      // 1. Dynamic Stride Bobbing (Getaran langkah & pantulan langkah realistis)
+    if (this.isFlying) {
+      // Broom flight locomotion: Mount broom, hover smoothly
+      const flyBob = Math.sin(now * 3.5) * 0.08;
+      const flyPitch = isMoving ? 0.22 : 0.05;
+      const flyRoll = THREE.MathUtils.clamp(-turnDiff * 0.25, -0.28, 0.28);
+
+      this.modelContainer.position.y = THREE.MathUtils.lerp(this.modelContainer.position.y, this.baseModelY + flyBob, 0.2);
+      this.modelContainer.position.x = THREE.MathUtils.lerp(this.modelContainer.position.x, 0, 0.2);
+      this.modelContainer.rotation.x = THREE.MathUtils.lerp(this.modelContainer.rotation.x, flyPitch, 0.2);
+      this.modelContainer.rotation.z = THREE.MathUtils.lerp(this.modelContainer.rotation.z, flyRoll, 0.2);
+
+      // Mount broom horizontally between legs
+      if (this.broomMesh) {
+        this.broomMesh.position.set(0, 0.52, 0.12);
+        this.broomMesh.rotation.set(-0.25, 0, 0);
+      }
+
+      // Hands grip broom handle
+      if (this.bones['Upper_Arm_L']) {
+        const baseZ = this.initBoneRotations['Upper_Arm_L']?.z || 0;
+        this.bones['Upper_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_L'].rotation.z, baseZ + 0.45, 0.2);
+      }
+      if (this.bones['Lower_Arm_L']) {
+        const baseZ = this.initBoneRotations['Lower_Arm_L']?.z || 0;
+        this.bones['Lower_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_L'].rotation.z, baseZ + 0.35, 0.2);
+      }
+      if (this.bones['Upper_Arm_R']) {
+        const baseZ = this.initBoneRotations['Upper_Arm_R']?.z || 0;
+        this.bones['Upper_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.z, baseZ - 0.45, 0.2);
+      }
+      if (this.bones['Lower_Arm_R']) {
+        const baseZ = this.initBoneRotations['Lower_Arm_R']?.z || 0;
+        this.bones['Lower_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_R'].rotation.z, baseZ - 0.35, 0.2);
+      }
+
+      // Legs tuck into flying riding pose
+      if (this.bones['Upper_Leg_L']) {
+        const baseX = this.initBoneRotations['Upper_Leg_L']?.x || 0;
+        this.bones['Upper_Leg_L'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_L'].rotation.x, baseX - 0.35, 0.2);
+      }
+      if (this.bones['Lower_Leg_L']) {
+        const baseZ = this.initBoneRotations['Lower_Leg_L']?.z || 0;
+        this.bones['Lower_Leg_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_L'].rotation.z, baseZ + 0.55, 0.2);
+      }
+      if (this.bones['Upper_Leg_R']) {
+        const baseX = this.initBoneRotations['Upper_Leg_R']?.x || 0;
+        this.bones['Upper_Leg_R'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_R'].rotation.x, baseX - 0.35, 0.2);
+      }
+      if (this.bones['Lower_Leg_R']) {
+        const baseZ = this.initBoneRotations['Lower_Leg_R']?.z || 0;
+        this.bones['Lower_Leg_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_R'].rotation.z, baseZ - 0.55, 0.2);
+      }
+
+      // Hair flutter in the wind
+      const windFlutter = Math.sin(now * 14) * 0.12;
+      ['HairBack_01', 'HairBack_02', 'Coat_L_Back_01', 'Coat_R_Back_01'].forEach((bName) => {
+        if (this.bones[bName]) {
+          const baseX = this.initBoneRotations[bName]?.x || 0;
+          this.bones[bName].rotation.x = THREE.MathUtils.lerp(this.bones[bName].rotation.x, baseX - 0.35 + windFlutter, 0.2);
+        }
+      });
+    } else if (isMoving && this.isGrounded) {
+      const cycleSpeed = speed * (this.keys.sprint ? 3.6 : 2.8);
+      this.walkCycle += dt * cycleSpeed;
+
+      const stepPhase = Math.sin(this.walkCycle);
+      const strideSpeed = this.keys.sprint ? 1.35 : 1.0;
+
+      // 1. Dynamic Body Bobbing, Sway & Forward Lean
       const strideBob = Math.abs(Math.sin(this.walkCycle)) * 0.055;
       const strideSway = Math.sin(this.walkCycle) * 0.035;
       const strideRoll = Math.cos(this.walkCycle) * 0.025;
-
-      // 2. Forward Locomotion Lean & Turning Bank (Kemiringan tubuh saat gerak)
-      const forwardLean = 0.075;
+      const forwardLean = this.keys.sprint ? 0.13 : 0.075;
       const turnBank = THREE.MathUtils.clamp(-turnDiff * 0.18, -0.15, 0.15);
 
       this.modelContainer.position.y = THREE.MathUtils.lerp(this.modelContainer.position.y, this.baseModelY + strideBob, 0.3);
@@ -558,13 +715,76 @@ export class PlayerController {
       this.modelContainer.rotation.x = THREE.MathUtils.lerp(this.modelContainer.rotation.x, forwardLean, 0.2);
       this.modelContainer.rotation.z = THREE.MathUtils.lerp(this.modelContainer.rotation.z, strideRoll + turnBank, 0.2);
 
-      // Subtle dynamic wand and broom sway
-      if (this.broomMesh) {
-        this.broomMesh.rotation.z = 0.82 + Math.sin(this.walkCycle) * 0.06;
+      // 2. Active Arm Swing Kinematics (Natural cross-limb human coordination)
+      const armSwingAmp = 0.52 * strideSpeed;
+      const elbowBendAmp = 0.40 * strideSpeed;
+
+      if (!this.currentEmote) {
+        if (this.bones['Upper_Arm_L']) {
+          const baseZ = this.initBoneRotations['Upper_Arm_L']?.z || 0;
+          const targetZ = baseZ - stepPhase * armSwingAmp;
+          this.bones['Upper_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_L'].rotation.z, targetZ, 0.3);
+        }
+        if (this.bones['Lower_Arm_L']) {
+          const baseZ = this.initBoneRotations['Lower_Arm_L']?.z || 0;
+          const targetZ = baseZ + Math.max(0, -stepPhase * elbowBendAmp);
+          this.bones['Lower_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_L'].rotation.z, targetZ, 0.3);
+        }
+
+        if (this.bones['Upper_Arm_R']) {
+          const baseZ = this.initBoneRotations['Upper_Arm_R']?.z || 0;
+          const targetZ = baseZ - stepPhase * armSwingAmp;
+          this.bones['Upper_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.z, targetZ, 0.3);
+        }
+        if (this.bones['Lower_Arm_R']) {
+          const baseZ = this.initBoneRotations['Lower_Arm_R']?.z || 0;
+          const targetZ = baseZ - Math.max(0, stepPhase * elbowBendAmp);
+          this.bones['Lower_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_R'].rotation.z, targetZ, 0.3);
+        }
       }
-      if (this.wandMesh) {
+
+      // 3. Active Leg Strides & Knee Flexion Kinematics
+      const legStrideAmp = 0.42 * strideSpeed;
+      const kneeBendAmp = 0.45 * strideSpeed;
+
+      if (this.bones['Upper_Leg_L']) {
+        const baseX = this.initBoneRotations['Upper_Leg_L']?.x || 0;
+        const targetX = baseX - stepPhase * legStrideAmp;
+        this.bones['Upper_Leg_L'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_L'].rotation.x, targetX, 0.3);
+      }
+      if (this.bones['Lower_Leg_L']) {
+        const baseZ = this.initBoneRotations['Lower_Leg_L']?.z || 0;
+        const targetZ = baseZ + Math.max(0, stepPhase * kneeBendAmp);
+        this.bones['Lower_Leg_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_L'].rotation.z, targetZ, 0.3);
+      }
+
+      if (this.bones['Upper_Leg_R']) {
+        const baseX = this.initBoneRotations['Upper_Leg_R']?.x || 0;
+        const targetX = baseX + stepPhase * legStrideAmp;
+        this.bones['Upper_Leg_R'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_R'].rotation.x, targetX, 0.3);
+      }
+      if (this.bones['Lower_Leg_R']) {
+        const baseZ = this.initBoneRotations['Lower_Leg_R']?.z || 0;
+        const targetZ = baseZ - Math.max(0, -stepPhase * kneeBendAmp);
+        this.bones['Lower_Leg_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_R'].rotation.z, targetZ, 0.3);
+      }
+
+      // 4. Subtle Hair & Coat Tail Flutter
+      const flutter = Math.sin(this.walkCycle * 2) * 0.08;
+      ['HairBack_01', 'HairBack_02', 'Coat_L_Back_01', 'Coat_R_Back_01'].forEach((bName) => {
+        if (this.bones[bName]) {
+          const baseX = this.initBoneRotations[bName]?.x || 0;
+          this.bones[bName].rotation.x = THREE.MathUtils.lerp(this.bones[bName].rotation.x, baseX - 0.12 + flutter, 0.2);
+        }
+      });
+
+      // 5. Dynamic Wand and Broom follow
+      if (this.broomMesh) {
+        this.broomMesh.rotation.z = 0.82 + Math.sin(this.walkCycle) * 0.08;
+      }
+      if (this.wandMesh && !this.currentEmote) {
         this.wandMesh.position.y = 0.72 + Math.sin(this.walkCycle * 2) * 0.03;
-        this.wandMesh.rotation.x = -0.35 + Math.sin(this.walkCycle) * 0.15;
+        this.wandMesh.rotation.x = -0.35 + stepPhase * 0.25;
       }
 
       // Footstep audio on downbeat
@@ -574,7 +794,7 @@ export class PlayerController {
         soundEngine.playFootstep('wood');
       }
     } else {
-      // Natural Idle Breathing & Gentle Weight Shift (Pernapasan halus & luwes)
+      // Natural Idle Breathing & Gentle Weight Shift (Smooth return to rest pose)
       const breath = Math.sin(now * 2.2) * 0.016;
       const idleSway = Math.sin(now * 1.2) * 0.012;
 
@@ -583,12 +803,110 @@ export class PlayerController {
       this.modelContainer.rotation.x = THREE.MathUtils.lerp(this.modelContainer.rotation.x, breath * 0.3, 0.1);
       this.modelContainer.rotation.z = THREE.MathUtils.lerp(this.modelContainer.rotation.z, idleSway, 0.1);
 
+      // Spine & chest idle breath
+      if (this.bones['Chest']) {
+        const baseX = this.initBoneRotations['Chest']?.x || 0;
+        this.bones['Chest'].rotation.x = THREE.MathUtils.lerp(this.bones['Chest'].rotation.x, baseX + breath * 0.4, 0.1);
+      }
+
+      // Smoothly return arms to calm resting pose unless emote active
+      if (!this.currentEmote) {
+        if (this.bones['Upper_Arm_L']) {
+          this.bones['Upper_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_L'].rotation.z, this.initBoneRotations['Upper_Arm_L']?.z || 0, 0.12);
+        }
+        if (this.bones['Upper_Arm_R']) {
+          this.bones['Upper_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.z, this.initBoneRotations['Upper_Arm_R']?.z || 0, 0.12);
+          this.bones['Upper_Arm_R'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.x, this.initBoneRotations['Upper_Arm_R']?.x || 0, 0.12);
+        }
+        if (this.bones['Lower_Arm_L']) {
+          this.bones['Lower_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_L'].rotation.z, this.initBoneRotations['Lower_Arm_L']?.z || 0, 0.12);
+        }
+        if (this.bones['Lower_Arm_R']) {
+          this.bones['Lower_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_R'].rotation.z, this.initBoneRotations['Lower_Arm_R']?.z || 0, 0.12);
+        }
+        if (this.bones['Wrist_R']) {
+          this.bones['Wrist_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Wrist_R'].rotation.z, this.initBoneRotations['Wrist_R']?.z || 0, 0.12);
+        }
+      }
+
+      // Smoothly return legs to neutral standing pose
+      if (this.bones['Upper_Leg_L']) {
+        this.bones['Upper_Leg_L'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_L'].rotation.x, this.initBoneRotations['Upper_Leg_L']?.x || 0, 0.12);
+      }
+      if (this.bones['Upper_Leg_R']) {
+        this.bones['Upper_Leg_R'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_R'].rotation.x, this.initBoneRotations['Upper_Leg_R']?.x || 0, 0.12);
+      }
+      if (this.bones['Lower_Leg_L']) {
+        this.bones['Lower_Leg_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_L'].rotation.z, this.initBoneRotations['Lower_Leg_L']?.z || 0, 0.12);
+      }
+      if (this.bones['Lower_Leg_R']) {
+        this.bones['Lower_Leg_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_R'].rotation.z, this.initBoneRotations['Lower_Leg_R']?.z || 0, 0.12);
+      }
+
+      // Reset hair and coat
+      ['HairBack_01', 'HairBack_02', 'Coat_L_Back_01', 'Coat_R_Back_01'].forEach((bName) => {
+        if (this.bones[bName]) {
+          this.bones[bName].rotation.x = THREE.MathUtils.lerp(this.bones[bName].rotation.x, this.initBoneRotations[bName]?.x || 0, 0.1);
+        }
+      });
+
       if (this.broomMesh) {
         this.broomMesh.rotation.z = THREE.MathUtils.lerp(this.broomMesh.rotation.z, 0.82, 0.1);
+        this.broomMesh.position.set(-0.16, 0.95, -0.16);
       }
-      if (this.wandMesh) {
+      if (this.wandMesh && !this.currentEmote) {
         this.wandMesh.position.y = THREE.MathUtils.lerp(this.wandMesh.position.y, 0.72 + breath * 0.5, 0.1);
         this.wandMesh.rotation.x = THREE.MathUtils.lerp(this.wandMesh.rotation.x, -0.35, 0.1);
+      }
+    }
+
+    // Mid-air Jump Pose
+    if (!this.isGrounded && !this.isFlying) {
+      if (this.bones['Upper_Arm_L']) {
+        const baseZ = this.initBoneRotations['Upper_Arm_L']?.z || 0;
+        this.bones['Upper_Arm_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_L'].rotation.z, baseZ - 0.35, 0.2);
+      }
+      if (this.bones['Upper_Arm_R']) {
+        const baseZ = this.initBoneRotations['Upper_Arm_R']?.z || 0;
+        this.bones['Upper_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.z, baseZ + 0.35, 0.2);
+      }
+      if (this.bones['Upper_Leg_L']) {
+        const baseX = this.initBoneRotations['Upper_Leg_L']?.x || 0;
+        this.bones['Upper_Leg_L'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_L'].rotation.x, baseX - 0.25, 0.2);
+      }
+      if (this.bones['Lower_Leg_L']) {
+        const baseZ = this.initBoneRotations['Lower_Leg_L']?.z || 0;
+        this.bones['Lower_Leg_L'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Leg_L'].rotation.z, baseZ + 0.5, 0.2);
+      }
+    }
+
+    // Emotes overrides
+    if (this.currentEmote === 'wave') {
+      const wavePhase = Math.sin(now * 12);
+      if (this.bones['Upper_Arm_R']) {
+        const baseX = this.initBoneRotations['Upper_Arm_R']?.x || 0;
+        this.bones['Upper_Arm_R'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.x, baseX - 1.25, 0.25);
+      }
+      if (this.bones['Wrist_R']) {
+        const baseZ = this.initBoneRotations['Wrist_R']?.z || 0;
+        this.bones['Wrist_R'].rotation.z = baseZ + wavePhase * 0.35;
+      }
+      if (this.wandMesh) {
+        this.wandMesh.position.set(0.35, 1.45, 0.2);
+        this.wandMesh.rotation.x = 0.2;
+      }
+    } else if (this.currentEmote === 'cast') {
+      if (this.bones['Upper_Arm_R']) {
+        const baseZ = this.initBoneRotations['Upper_Arm_R']?.z || 0;
+        this.bones['Upper_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.z, baseZ - 0.85, 0.25);
+      }
+      if (this.bones['Lower_Arm_R']) {
+        const baseZ = this.initBoneRotations['Lower_Arm_R']?.z || 0;
+        this.bones['Lower_Arm_R'].rotation.z = THREE.MathUtils.lerp(this.bones['Lower_Arm_R'].rotation.z, baseZ - 0.45, 0.25);
+      }
+      if (this.wandMesh) {
+        this.wandMesh.position.set(0.28, 0.95, 0.45);
+        this.wandMesh.rotation.x = 1.2;
       }
     }
   }

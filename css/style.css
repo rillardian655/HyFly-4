@@ -638,3 +638,51 @@ dialog::backdrop {
   letter-spacing: 0.05em;
   color: #d4af37;
 }
+
+/* Character Emote Actions Bar */
+.emote-bar {
+  position: absolute;
+  bottom: 5.5rem;
+  right: 1.5rem;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  pointer-events: auto;
+}
+
+.btn-emote {
+  background: rgba(18, 22, 34, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #f1ede4;
+  padding: 0.5rem 0.9rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  text-align: center;
+}
+
+.btn-emote:hover {
+  background: rgba(212, 175, 55, 0.25);
+  border-color: #d4af37;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.3);
+}
+
+.btn-emote:active {
+  transform: translateY(1px) scale(0.96);
+}
+
+.btn-emote.active-mode {
+  background: #d4af37;
+  color: #1a162b;
+  border-color: #fce79a;
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.5);
+}
+

@@ -109,6 +109,11 @@ The residence is structured across a 28m by 28m floor plan divided into four int
 * **Mouse Drag:** Rotate third-person camera perspective.
 * **Mouse Scroll Wheel:** Zoom camera distance.
 
+### Character Gestures and Flight
+* **1 Key / [1] Button:** Wave hand emote gesture.
+* **2 Key / [2] Button:** Cast starlight magic spell with wand.
+* **3 Key / F Key / [3] Button:** Toggle Broom Flight mode (mount broom, hover in 3D space, vertical climb with Space and descent with Shift).
+
 ### Interaction
 * **E Key or Left Click:** Trigger interaction when near an active object.
 * **Proximity HUD:** An on-screen prompt displays automatically whenever Elaina approaches an interactable appliance or device.

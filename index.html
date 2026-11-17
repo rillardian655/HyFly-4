@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HyFly-4 // Interactive 3D Virtual House & World</title>
-  <link rel="stylesheet" href="css/style.css?v=6.0">
+  <link rel="stylesheet" href="css/style.css?v=7.0">
   
   <script type="importmap">
   {
@@ -69,6 +69,13 @@
       </div>
     </div>
 
+    <!-- Character Emote Actions (Click / Keyboard 1, 2, 3) -->
+    <div class="emote-bar">
+      <button type="button" id="btn-emote-wave" class="btn-emote" data-emote="wave">[1] Wave Hand</button>
+      <button type="button" id="btn-emote-cast" class="btn-emote" data-emote="cast">[2] Cast Spell</button>
+      <button type="button" id="btn-emote-fly" class="btn-emote" data-emote="fly">[3] Broom Fly</button>
+    </div>
+
     <!-- Notification Toasts -->
     <div id="toast-container" class="toast-container"></div>
 
@@ -78,6 +85,9 @@
         <span><strong>WASD / Arrows:</strong> Walk</span>
         <span><strong>Shift:</strong> Sprint</span>
         <span><strong>Space:</strong> Jump</span>
+        <span><strong>[1]</strong> Wave</span>
+        <span><strong>[2]</strong> Magic Cast</span>
+        <span><strong>[3] / [F]</strong> Broom Fly</span>
         <span><strong>Mouse Drag:</strong> Rotate Camera</span>
         <span><strong>[E] or Click:</strong> Interact</span>
       </div>
@@ -149,6 +159,6 @@
   </dialog>
 
   <!-- Main Orchestrator Script -->
-  <script type="module" src="js/main.js?v=6.0"></script>
+  <script type="module" src="js/main.js?v=7.0"></script>
 </body>
 </html>

@@ -3,12 +3,12 @@
  * Multi-Room House Exploration Game & 3D Interactive Hub
  */
 import * as THREE from 'three';
-import { SceneManager } from './scene.js';
-import { HouseBuilder } from './house.js';
-import { PlayerController } from './player.js';
-import { VirtualTerminal } from './terminal.js';
-import { UIManager } from './ui.js';
-import { soundEngine } from './audio.js';
+import { SceneManager } from './scene.js?v=7.0';
+import { HouseBuilder } from './house.js?v=7.0';
+import { PlayerController } from './player.js?v=7.0';
+import { VirtualTerminal } from './terminal.js?v=7.0';
+import { UIManager } from './ui.js?v=7.0';
+import { soundEngine } from './audio.js?v=7.0';
 
 function initApp() {
   const canvas = document.getElementById('webgl-canvas');
@@ -140,12 +140,52 @@ function initApp() {
 
   // Key 'E' triggers proximity interaction
   window.addEventListener('keydown', (e) => {
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
     if (e.code === 'KeyE') {
-      if (nearbyObject && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+      if (nearbyObject) {
         triggerInteraction(nearbyObject);
       }
+    } else if (e.code === 'Digit1') {
+      ui.showToast('Elaina waves cheerfully!');
+    } else if (e.code === 'Digit2') {
+      ui.showToast('Elaina casts a starlight magic spell!');
+    } else if (e.code === 'Digit3' || e.code === 'KeyF') {
+      setTimeout(() => {
+        if (btnFly) {
+          btnFly.classList.toggle('active-mode', player.isFlying);
+          btnFly.textContent = player.isFlying ? '[3] Land Broom' : '[3] Broom Fly';
+        }
+        ui.showToast(player.isFlying ? 'Broom Flight Mode: Fly freely with WASD + Space!' : 'Landed safely on feet');
+      }, 50);
     }
   });
+
+  // Emote Action Buttons
+  const btnWave = document.getElementById('btn-emote-wave');
+  const btnCast = document.getElementById('btn-emote-cast');
+  const btnFly = document.getElementById('btn-emote-fly');
+
+  if (btnWave) {
+    btnWave.addEventListener('click', () => {
+      player.playEmote('wave');
+      ui.showToast('Elaina waves cheerfully!');
+    });
+  }
+  if (btnCast) {
+    btnCast.addEventListener('click', () => {
+      player.playEmote('cast');
+      ui.showToast('Elaina casts a starlight magic spell!');
+    });
+  }
+  if (btnFly) {
+    btnFly.addEventListener('click', () => {
+      player.toggleFlight();
+      btnFly.classList.toggle('active-mode', player.isFlying);
+      btnFly.textContent = player.isFlying ? '[3] Land Broom' : '[3] Broom Fly';
+      ui.showToast(player.isFlying ? 'Broom Flight Mode: Fly freely with WASD + Space!' : 'Landed safely on feet');
+    });
+  }
 
   // Canvas click autofocus and input blur
   canvas.addEventListener('pointerdown', () => {

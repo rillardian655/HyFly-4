@@ -72,12 +72,13 @@ export class PlayerController {
     this.isFlying = false;
     this.flightHoverY = 1.4;
 
-    // Contact shadow
-    const shadowGeo = new THREE.CircleGeometry(0.55, 20);
+    // Soft ambient foot contact occlusion (subtle, lets dynamic sun shadows shine)
+    const shadowGeo = new THREE.CircleGeometry(0.28, 24);
     const shadowMat = new THREE.MeshBasicMaterial({
-      color: 0x000000,
+      color: 0x111111,
       transparent: true,
-      opacity: 0.38
+      opacity: 0.12,
+      depthWrite: false
     });
     this.shadowBlob = new THREE.Mesh(shadowGeo, shadowMat);
     this.shadowBlob.rotation.x = -Math.PI / 2;
@@ -259,7 +260,7 @@ export class PlayerController {
         });
 
         // Initialize relaxed arms hanging naturally at her sides upon spawn (no T-pose)
-        const spawnArmRestX = 0.95;
+        const spawnArmRestX = 0.20;
         if (this.rootBones['Upper_Arm_L'] && this.initBoneRotations['Upper_Arm_L']) {
           this.rootBones['Upper_Arm_L'].rotation.x = this.initBoneRotations['Upper_Arm_L'].x + spawnArmRestX;
         }
@@ -572,9 +573,9 @@ export class PlayerController {
         this.velocity.y *= 0.8;
       }
 
-      const nextX = THREE.MathUtils.clamp(this.position.x + this.velocity.x * dt, -13.4, 13.4);
-      const nextZ = THREE.MathUtils.clamp(this.position.z + this.velocity.z * dt, -13.4, 13.4);
-      const nextY = THREE.MathUtils.clamp(this.position.y + this.velocity.y * dt, 0.6, 5.5);
+      const nextX = THREE.MathUtils.clamp(this.position.x + this.velocity.x * dt, -8.6, 8.6);
+      const nextZ = THREE.MathUtils.clamp(this.position.z + this.velocity.z * dt, -8.6, 8.6);
+      const nextY = THREE.MathUtils.clamp(this.position.y + this.velocity.y * dt, 0.4, 3.2);
 
       this.position.set(nextX, nextY, nextZ);
       this.isGrounded = false;
@@ -611,7 +612,7 @@ export class PlayerController {
       const nextZ = this.position.z + this.velocity.z * dt;
       const nextY = this.position.y + this.velocity.y * dt;
 
-      const pRadius = 0.42;
+      const pRadius = 0.38;
       let allowedX = nextX;
       let allowedZ = nextZ;
 
@@ -635,8 +636,8 @@ export class PlayerController {
         }
       }
 
-      allowedX = Math.max(-13.4, Math.min(13.4, allowedX));
-      allowedZ = Math.max(-13.4, Math.min(13.4, allowedZ));
+      allowedX = Math.max(-8.6, Math.min(8.6, allowedX));
+      allowedZ = Math.max(-8.6, Math.min(8.6, allowedZ));
 
       this.position.x = allowedX;
       this.position.z = allowedZ;
@@ -687,8 +688,8 @@ export class PlayerController {
       }
     }
 
-    // Natural arm rest angle: brings arms down from default 67.5 deg T-pose into natural 14 deg relaxed side posture
-    const armRestX = 0.95;
+    // Gentle natural arm rest angle (hangs naturally beside her body, NO folded arms or T-pose)
+    const armRestX = 0.20;
     const baseArmLX = this.initBoneRotations['Upper_Arm_L']?.x ?? 0.157;
     const baseArmLZ = this.initBoneRotations['Upper_Arm_L']?.z ?? 0.068;
     const baseArmRX = this.initBoneRotations['Upper_Arm_R']?.x ?? 0.157;
@@ -703,9 +704,9 @@ export class PlayerController {
 
     if (this.isFlying) {
       // Broom flight locomotion: Mount broom, hover smoothly
-      const flyBob = Math.sin(now * 3.5) * 0.08;
-      const flyPitch = isMoving ? 0.22 : 0.05;
-      const flyRoll = THREE.MathUtils.clamp(-turnDiff * 0.25, -0.28, 0.28);
+      const flyBob = Math.sin(now * 3.5) * 0.06;
+      const flyPitch = isMoving ? 0.18 : 0.04;
+      const flyRoll = THREE.MathUtils.clamp(-turnDiff * 0.25, -0.25, 0.25);
 
       this.modelContainer.position.y = THREE.MathUtils.lerp(this.modelContainer.position.y, this.baseModelY + flyBob, 0.2);
       this.modelContainer.position.x = THREE.MathUtils.lerp(this.modelContainer.position.x, 0, 0.2);
@@ -719,25 +720,25 @@ export class PlayerController {
       }
 
       // Hands grip broom handle
-      this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + 0.35, 0.2);
-      this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ + 0.45, 0.2);
-      this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ + 0.35, 0.2);
+      this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + 0.18, 0.2);
+      this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ + 0.35, 0.2);
+      this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ, 0.2);
 
-      this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + 0.35, 0.2);
-      this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ - 0.45, 0.2);
-      this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ - 0.35, 0.2);
+      this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + 0.18, 0.2);
+      this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ - 0.35, 0.2);
+      this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ, 0.2);
 
       // Legs tuck into flying riding pose
-      this.setBoneRotation('Upper_Leg_L', 'x', baseLegLX - 0.35, 0.2);
-      this.setBoneRotation('Lower_Leg_L', 'z', baseKneeLZ + 0.55, 0.2);
-      this.setBoneRotation('Upper_Leg_R', 'x', baseLegRX - 0.35, 0.2);
-      this.setBoneRotation('Lower_Leg_R', 'z', baseKneeRZ - 0.55, 0.2);
+      this.setBoneRotation('Upper_Leg_L', 'x', baseLegLX - 0.25, 0.2);
+      this.setBoneRotation('Lower_Leg_L', 'z', baseKneeLZ, 0.2);
+      this.setBoneRotation('Upper_Leg_R', 'x', baseLegRX - 0.25, 0.2);
+      this.setBoneRotation('Lower_Leg_R', 'z', baseKneeRZ, 0.2);
 
-      // Hair flutter in the wind
-      const windFlutter = Math.sin(now * 14) * 0.12;
-      ['HairBack_01', 'HairBack_02', 'Coat_L_Back_01', 'Coat_R_Back_01'].forEach((bName) => {
+      // Subtle hair flutter in the wind
+      const windFlutter = Math.sin(now * 14) * 0.08;
+      ['HairBack_01', 'HairBack_02'].forEach((bName) => {
         const baseX = this.initBoneRotations[bName]?.x || 0;
-        this.setBoneRotation(bName, 'x', baseX - 0.35 + windFlutter, 0.2);
+        this.setBoneRotation(bName, 'x', baseX - 0.2 + windFlutter, 0.2);
       });
     } else if (isMoving && this.isGrounded) {
       const cycleSpeed = speed * (this.keys.sprint ? 3.6 : 2.8);
@@ -747,58 +748,56 @@ export class PlayerController {
       const strideSpeed = this.keys.sprint ? 1.35 : 1.0;
 
       // 1. Dynamic Body Bobbing, Sway & Forward Lean
-      const strideBob = Math.abs(Math.sin(this.walkCycle)) * 0.055;
-      const strideSway = Math.sin(this.walkCycle) * 0.035;
-      const strideRoll = Math.cos(this.walkCycle) * 0.025;
-      const forwardLean = this.keys.sprint ? 0.13 : 0.075;
-      const turnBank = THREE.MathUtils.clamp(-turnDiff * 0.18, -0.15, 0.15);
+      const strideBob = Math.abs(Math.sin(this.walkCycle)) * 0.045;
+      const strideSway = Math.sin(this.walkCycle) * 0.025;
+      const strideRoll = Math.cos(this.walkCycle) * 0.02;
+      const forwardLean = this.keys.sprint ? 0.09 : 0.05;
+      const turnBank = THREE.MathUtils.clamp(-turnDiff * 0.15, -0.12, 0.12);
 
       this.modelContainer.position.y = THREE.MathUtils.lerp(this.modelContainer.position.y, this.baseModelY + strideBob, 0.3);
       this.modelContainer.position.x = THREE.MathUtils.lerp(this.modelContainer.position.x, strideSway * 0.4, 0.3);
       this.modelContainer.rotation.x = THREE.MathUtils.lerp(this.modelContainer.rotation.x, forwardLean, 0.2);
       this.modelContainer.rotation.z = THREE.MathUtils.lerp(this.modelContainer.rotation.z, strideRoll + turnBank, 0.2);
 
-      // 2. Active Arm Swing Kinematics (Natural human swing from relaxed side posture, NO T-POSE!)
-      const armSwingAmp = 0.48 * strideSpeed;
-      const elbowBendAmp = 0.38 * strideSpeed;
+      // 2. Active Arm Swing Kinematics (Natural human swing forward & back alongside hips)
+      const armSwingAmp = 0.32 * strideSpeed;
       const armSwing = stepPhase * armSwingAmp;
 
       if (!this.currentEmote) {
-        // Left arm: armRestX lowers the arm, armSwing moves forward (+Z) and back (-Z)
+        // Left arm: armRestX keeps it at her side, armSwing moves forward (+Z) and back (-Z)
         this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + armRestX, 0.3);
         this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ - armSwing, 0.3);
-        this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ + 0.12 + Math.max(0, -armSwing * 0.5), 0.3);
+        this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ, 0.3);
 
-        // Right arm: armRestX lowers the arm, armSwing moves forward (+Z) and back (-Z)
+        // Right arm: armRestX keeps it at her side, armSwing moves forward (+Z) and back (-Z)
         this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + armRestX, 0.3);
         this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ - armSwing, 0.3);
-        this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ - 0.12 - Math.max(0, armSwing * 0.5), 0.3);
+        this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ, 0.3);
       }
 
-      // 3. Active Leg Strides & Knee Flexion Kinematics
-      const legStrideAmp = 0.42 * strideSpeed;
-      const kneeBendAmp = 0.45 * strideSpeed;
+      // 3. Natural Leg Stride Kinematics (Clean forward/backward thigh swings, straight knees)
+      const legStrideAmp = 0.25 * strideSpeed;
 
       this.setBoneRotation('Upper_Leg_L', 'x', baseLegLX - stepPhase * legStrideAmp, 0.3);
-      this.setBoneRotation('Lower_Leg_L', 'z', baseKneeLZ + Math.max(0, stepPhase * kneeBendAmp), 0.3);
+      this.setBoneRotation('Lower_Leg_L', 'z', baseKneeLZ, 0.3);
 
       this.setBoneRotation('Upper_Leg_R', 'x', baseLegRX + stepPhase * legStrideAmp, 0.3);
-      this.setBoneRotation('Lower_Leg_R', 'z', baseKneeRZ - Math.max(0, -stepPhase * kneeBendAmp), 0.3);
+      this.setBoneRotation('Lower_Leg_R', 'z', baseKneeRZ, 0.3);
 
-      // 4. Subtle Hair & Coat Tail Flutter
-      const flutter = Math.sin(this.walkCycle * 2) * 0.08;
-      ['HairBack_01', 'HairBack_02', 'Coat_L_Back_01', 'Coat_R_Back_01'].forEach((bName) => {
+      // 4. Subtle Hair Flutter
+      const flutter = Math.sin(this.walkCycle * 2) * 0.05;
+      ['HairBack_01', 'HairBack_02'].forEach((bName) => {
         const baseX = this.initBoneRotations[bName]?.x || 0;
-        this.setBoneRotation(bName, 'x', baseX - 0.12 + flutter, 0.2);
+        this.setBoneRotation(bName, 'x', baseX - 0.08 + flutter, 0.2);
       });
 
       // 5. Dynamic Wand and Broom follow
       if (this.broomMesh) {
-        this.broomMesh.rotation.z = 0.82 + Math.sin(this.walkCycle) * 0.08;
+        this.broomMesh.rotation.z = 0.82 + Math.sin(this.walkCycle) * 0.05;
       }
       if (this.wandMesh && !this.currentEmote) {
-        this.wandMesh.position.set(-0.16, 0.74 + Math.sin(this.walkCycle * 2) * 0.03, 0.08 + armSwing * 0.25);
-        this.wandMesh.rotation.set(-0.25 + armSwing * 0.3, 0.15, -0.12);
+        this.wandMesh.position.set(-0.16, 0.74 + Math.sin(this.walkCycle * 2) * 0.02, 0.08 + armSwing * 0.2);
+        this.wandMesh.rotation.set(-0.25 + armSwing * 0.2, 0.15, -0.12);
       }
 
       // Footstep audio on downbeat
@@ -808,38 +807,38 @@ export class PlayerController {
         soundEngine.playFootstep('wood');
       }
     } else {
-      // Natural Idle Breathing & Gentle Weight Shift (Completely relaxed arms at sides, NO T-POSE!)
-      const breath = Math.sin(now * 2.2) * 0.016;
-      const idleSway = Math.sin(now * 1.2) * 0.012;
+      // Natural Idle Breathing & Gentle Weight Shift (Completely relaxed arms at sides)
+      const breath = Math.sin(now * 2.2) * 0.012;
+      const idleSway = Math.sin(now * 1.2) * 0.008;
 
       this.modelContainer.position.y = THREE.MathUtils.lerp(this.modelContainer.position.y, this.baseModelY + breath, 0.1);
       this.modelContainer.position.x = THREE.MathUtils.lerp(this.modelContainer.position.x, 0, 0.1);
-      this.modelContainer.rotation.x = THREE.MathUtils.lerp(this.modelContainer.rotation.x, breath * 0.3, 0.1);
+      this.modelContainer.rotation.x = THREE.MathUtils.lerp(this.modelContainer.rotation.x, breath * 0.2, 0.1);
       this.modelContainer.rotation.z = THREE.MathUtils.lerp(this.modelContainer.rotation.z, idleSway, 0.1);
 
       // Spine & chest idle breath
       const baseChestX = this.initBoneRotations['Chest']?.x || -0.236;
-      this.setBoneRotation('Chest', 'x', baseChestX + breath * 0.4, 0.1);
+      this.setBoneRotation('Chest', 'x', baseChestX + breath * 0.3, 0.1);
 
-      // Beautiful relaxed arm pose at her sides (no T-pose!)
+      // Beautiful relaxed arm pose at her sides (arms rest naturally beside hips)
       if (!this.currentEmote) {
         this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + armRestX, 0.15);
-        this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ + breath * 0.2, 0.15);
-        this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ + 0.12, 0.15);
+        this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ, 0.15);
+        this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ, 0.15);
 
         this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + armRestX, 0.15);
-        this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ - breath * 0.2, 0.15);
-        this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ - 0.12, 0.15);
+        this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ, 0.15);
+        this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ, 0.15);
       }
 
-      // Smoothly return legs to neutral standing pose
-      this.setBoneRotation('Upper_Leg_L', 'x', baseLegLX, 0.12);
-      this.setBoneRotation('Lower_Leg_L', 'z', baseKneeLZ, 0.12);
-      this.setBoneRotation('Upper_Leg_R', 'x', baseLegRX, 0.12);
-      this.setBoneRotation('Lower_Leg_R', 'z', baseKneeRZ, 0.12);
+      // Smoothly return legs to neutral standing pose (straight, unbent)
+      this.setBoneRotation('Upper_Leg_L', 'x', baseLegLX, 0.2);
+      this.setBoneRotation('Lower_Leg_L', 'z', baseKneeLZ, 0.2);
+      this.setBoneRotation('Upper_Leg_R', 'x', baseLegRX, 0.2);
+      this.setBoneRotation('Lower_Leg_R', 'z', baseKneeRZ, 0.2);
 
-      // Reset hair and coat
-      ['HairBack_01', 'HairBack_02', 'Coat_L_Back_01', 'Coat_R_Back_01'].forEach((bName) => {
+      // Reset hair
+      ['HairBack_01', 'HairBack_02'].forEach((bName) => {
         const baseX = this.initBoneRotations[bName]?.x || 0;
         this.setBoneRotation(bName, 'x', baseX, 0.1);
       });
@@ -849,19 +848,18 @@ export class PlayerController {
         this.broomMesh.position.set(-0.16, 0.95, -0.16);
       }
       if (this.wandMesh && !this.currentEmote) {
-        this.wandMesh.position.set(-0.16, 0.74 + breath * 0.5, 0.08);
+        this.wandMesh.position.set(-0.16, 0.74 + breath * 0.3, 0.08);
         this.wandMesh.rotation.set(-0.25, 0.15, -0.12);
       }
     }
 
     // Mid-air Jump Pose
     if (!this.isGrounded && !this.isFlying) {
-      this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + 0.5, 0.2);
-      this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + 0.5, 0.2);
-      this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ - 0.35, 0.2);
-      this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ + 0.35, 0.2);
-      this.setBoneRotation('Upper_Leg_L', 'x', baseLegLX - 0.25, 0.2);
-      this.setBoneRotation('Lower_Leg_L', 'z', baseKneeLZ + 0.5, 0.2);
+      this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + 0.3, 0.2);
+      this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + 0.3, 0.2);
+      this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ - 0.2, 0.2);
+      this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ + 0.2, 0.2);
+      this.setBoneRotation('Upper_Leg_L', 'x', baseLegLX - 0.2, 0.2);
     }
 
     // Emotes overrides
@@ -902,10 +900,10 @@ export class PlayerController {
 
     const desiredCamPos = this.position.clone().add(camOffset);
 
-    // Wall collision clamping
-    desiredCamPos.x = Math.max(-13.2, Math.min(13.2, desiredCamPos.x));
-    desiredCamPos.z = Math.max(-13.2, Math.min(13.2, desiredCamPos.z));
-    desiredCamPos.y = Math.max(0.35, Math.min(7.2, desiredCamPos.y));
+    // Wall collision clamping to 18m house perimeter and ceiling
+    desiredCamPos.x = Math.max(-8.4, Math.min(8.4, desiredCamPos.x));
+    desiredCamPos.z = Math.max(-8.4, Math.min(8.4, desiredCamPos.z));
+    desiredCamPos.y = Math.max(0.35, Math.min(3.25, desiredCamPos.y));
 
     this.camera.position.lerp(desiredCamPos, 0.14);
     this.camera.lookAt(targetLook);

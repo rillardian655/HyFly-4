@@ -52,36 +52,49 @@ export class SceneManager {
   }
 
   setupLighting() {
-    // Warm natural ambient bounce
-    this.ambientLight = new THREE.AmbientLight(0xfff5ea, 0.65);
+    // Warm natural ambient bounce & skylight illumination
+    this.ambientLight = new THREE.AmbientLight(0xfff6ec, 0.75);
     this.scene.add(this.ambientLight);
 
-    // Warm Sunbeam directional light
-    this.sunLight = new THREE.DirectionalLight(0xfffaed, 1.6);
-    this.sunLight.position.set(-16, 22, -10);
+    // Hemisphere light: soft warm sky and natural timber floor reflection (keeps character face luminous)
+    this.hemiLight = new THREE.HemisphereLight(0xfff5ea, 0x8a7b6a, 0.65);
+    this.scene.add(this.hemiLight);
+
+    // Directional Sunlight pouring through skylights and panoramic south/east windows
+    this.sunLight = new THREE.DirectionalLight(0xfffaed, 2.0);
+    this.sunLight.position.set(-6, 12, -4);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.width = 2048;
     this.sunLight.shadow.mapSize.height = 2048;
     this.sunLight.shadow.camera.near = 1.0;
-    this.sunLight.shadow.camera.far = 60;
-    this.sunLight.shadow.camera.left = -20;
-    this.sunLight.shadow.camera.right = 20;
-    this.sunLight.shadow.camera.top = 20;
-    this.sunLight.shadow.camera.bottom = -20;
-    this.sunLight.shadow.bias = -0.0005;
+    this.sunLight.shadow.camera.far = 40;
+    this.sunLight.shadow.camera.left = -11;
+    this.sunLight.shadow.camera.right = 11;
+    this.sunLight.shadow.camera.top = 11;
+    this.sunLight.shadow.camera.bottom = -11;
+    this.sunLight.shadow.bias = -0.0003;
+    this.sunLight.shadow.normalBias = 0.02;
     this.scene.add(this.sunLight);
 
-    // Warm interior ceiling downlights (warm incandescent glow)
-    const livingLight = new THREE.PointLight(0xffeedd, 0.9, 16);
-    livingLight.position.set(7.0, 6.5, -4.0);
+    // Warm interior ceiling downlights (placed at y = 3.2m under the 3.4m ceiling)
+    const livingLight = new THREE.PointLight(0xffeedd, 1.0, 12);
+    livingLight.position.set(4.5, 3.2, -4.0);
     this.scene.add(livingLight);
 
-    const kitchenLight = new THREE.PointLight(0xfff3e6, 0.9, 16);
-    kitchenLight.position.set(-7.0, 6.5, 7.0);
+    const kitchenLight = new THREE.PointLight(0xfff3e6, 1.0, 12);
+    kitchenLight.position.set(-4.5, 3.2, 4.0);
     this.scene.add(kitchenLight);
 
-    const corridorLight = new THREE.PointLight(0xfff0dd, 0.8, 14);
-    corridorLight.position.set(0, 6.5, 0);
+    const bedroomLight = new THREE.PointLight(0xffe8d6, 0.9, 12);
+    bedroomLight.position.set(4.5, 3.2, 4.0);
+    this.scene.add(bedroomLight);
+
+    const studioLight = new THREE.PointLight(0xfff5e4, 0.9, 12);
+    studioLight.position.set(-4.5, 3.2, -4.0);
+    this.scene.add(studioLight);
+
+    const corridorLight = new THREE.PointLight(0xfff0dd, 0.8, 10);
+    corridorLight.position.set(0, 3.2, 0);
     this.scene.add(corridorLight);
   }
 
@@ -115,8 +128,9 @@ export class SceneManager {
         this.scene.background.setHex(0x93c5fd); // Soft natural sky blue
         this.ambientLight.color.setHex(0xfff8ee);
         this.ambientLight.intensity = 0.85;
+        if (this.hemiLight) this.hemiLight.intensity = 0.65;
         this.sunLight.color.setHex(0xfffaed);
-        this.sunLight.intensity = 1.9;
+        this.sunLight.intensity = 2.0;
         if (this.stars) this.stars.visible = false;
         break;
 
@@ -124,6 +138,7 @@ export class SceneManager {
         this.scene.background.setHex(0xf97316); // Golden hour sunset
         this.ambientLight.color.setHex(0xfed7aa);
         this.ambientLight.intensity = 0.7;
+        if (this.hemiLight) this.hemiLight.intensity = 0.5;
         this.sunLight.color.setHex(0xfb923c);
         this.sunLight.intensity = 1.7;
         if (this.stars) this.stars.visible = false;
@@ -134,6 +149,7 @@ export class SceneManager {
         this.scene.background.setHex(0x0f172a); // Deep cozy night
         this.ambientLight.color.setHex(0x334155);
         this.ambientLight.intensity = 0.45;
+        if (this.hemiLight) this.hemiLight.intensity = 0.25;
         this.sunLight.color.setHex(0x94a3b8);
         this.sunLight.intensity = 0.5;
         if (this.stars) this.stars.visible = true;

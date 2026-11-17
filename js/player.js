@@ -1,12 +1,10 @@
 /**
- * Contemporary Casual 3D Character Controller & Kinematics
- * Features:
- * - Natural human outfit (knit sweater, casual chinos, leather sneakers)
- * - Synchronized footstep audio effects and landing physics
- * - Camera occlusion raycasting to prevent wall clipping
- * - Smooth physics locomotion and responsive jump mechanics
+ * Elaina (Wandering Witch / Majo no Tabitabi) Character Controller
+ * Loads the rigged FBX avatar with high-res anime textures,
+ * procedural skeletal kinematics, synchronized footsteps, and third-person camera.
  */
 import * as THREE from 'three';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { soundEngine } from './audio.js';
 
 export class PlayerController {
@@ -34,84 +32,31 @@ export class PlayerController {
     this.wasGrounded = true;
     this.walkCycle = 0;
     this.lastFootstepStep = 0;
-    this.walkSpeed = 5.2;
-    this.sprintSpeed = 8.6;
+    this.walkSpeed = 5.0;
+    this.sprintSpeed = 8.4;
     this.gravity = 22.0;
-    this.jumpForce = 7.8;
+    this.jumpForce = 7.6;
 
     // Camera follow parameters
-    this.camDistance = 4.8;
-    this.targetCamDistance = 4.8;
-    this.camHeight = 2.4;
+    this.camDistance = 4.4;
+    this.targetCamDistance = 4.4;
+    this.camHeight = 2.2;
     this.camAngleX = 0;
-    this.camAngleY = 0.26;
+    this.camAngleY = 0.24;
 
     this.colliders = [];
-    this.cameraRaycaster = new THREE.Raycaster();
+
+    // Model & Bones
     this.group = new THREE.Group();
-    this.buildCasualCharacter();
     this.scene.add(this.group);
 
-    this.initKeyboard();
-    this.initMouseLook();
-  }
+    this.elainaMesh = null;
+    this.bones = {};
+    this.initBoneRotations = {};
+    this.isLoaded = false;
 
-  buildCasualCharacter() {
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdfba, roughness: 0.6 });
-    const hairMat = new THREE.MeshStandardMaterial({ color: 0x2b1e16, roughness: 0.4 });
-    const sweaterMat = new THREE.MeshStandardMaterial({ color: 0xe5ded6, roughness: 0.85 });
-    const pantsMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.75 });
-    const sneakerSoleMat = new THREE.MeshStandardMaterial({ color: 0xfdfdfd, roughness: 0.25 });
-    const sneakerUpperMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 });
-
-    // 1. Torso: Cozy Knit Wool Crewneck Sweater
-    const torsoGeo = new THREE.CylinderGeometry(0.36, 0.32, 0.82, 16);
-    this.torso = new THREE.Mesh(torsoGeo, sweaterMat);
-    this.torso.position.y = 1.35;
-    this.torso.castShadow = true;
-    this.group.add(this.torso);
-
-    const collar = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.045, 8, 16), sweaterMat);
-    collar.position.set(0, 1.76, 0);
-    collar.rotation.x = Math.PI / 2;
-    this.group.add(collar);
-
-    // 2. Head & Realistic Casual Hair
-    const headGeo = new THREE.SphereGeometry(0.24, 18, 18);
-    this.head = new THREE.Mesh(headGeo, skinMat);
-    this.head.position.y = 1.98;
-    this.head.castShadow = true;
-    this.group.add(this.head);
-
-    const hairBase = new THREE.Mesh(
-      new THREE.SphereGeometry(0.26, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.58),
-      hairMat
-    );
-    hairBase.position.set(0, 2.02, -0.02);
-    this.group.add(hairBase);
-
-    for (let i = 0; i < 4; i++) {
-      const lock = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.16, 6), hairMat);
-      lock.position.set(-0.12 + i * 0.08, 2.08, 0.2);
-      lock.rotation.x = 0.45;
-      lock.rotation.z = (i - 1.5) * 0.15;
-      this.group.add(lock);
-    }
-
-    // 3. Articulated Arms
-    this.leftArm = this.buildArm(-1, sweaterMat, skinMat);
-    this.rightArm = this.buildArm(1, sweaterMat, skinMat);
-    this.group.add(this.leftArm);
-    this.group.add(this.rightArm);
-
-    // 4. Articulated Legs
-    this.leftLeg = this.buildLeg(-1, pantsMat, sneakerSoleMat, sneakerUpperMat);
-    this.rightLeg = this.buildLeg(1, pantsMat, sneakerSoleMat, sneakerUpperMat);
-    this.group.add(this.leftLeg);
-    this.group.add(this.rightLeg);
-
-    // Dynamic contact shadow
-    const shadowGeo = new THREE.CircleGeometry(0.52, 20);
+    // Contact shadow
+    const shadowGeo = new THREE.CircleGeometry(0.55, 20);
     const shadowMat = new THREE.MeshBasicMaterial({
       color: 0x000000,
       transparent: true,
@@ -121,49 +66,135 @@ export class PlayerController {
     this.shadowBlob.rotation.x = -Math.PI / 2;
     this.shadowBlob.position.y = 0.015;
     this.scene.add(this.shadowBlob);
+
+    this.loadElainaModel();
+    this.initKeyboard();
+    this.initMouseLook();
   }
 
-  buildArm(side, sleeveMat, handMat) {
-    const armGroup = new THREE.Group();
-    armGroup.position.set(side * 0.44, 1.62, 0);
+  loadElainaModel() {
+    const texLoader = new THREE.TextureLoader();
+    const loadTex = (file, alpha = false) => {
+      const tex = texLoader.load(`assets/elaina/textures/${file}`);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    };
 
-    const shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), sleeveMat);
-    armGroup.add(shoulder);
+    const textures = {
+      Coat: loadTex('Coat.png'),
+      Face: loadTex('Face.png'),
+      Hair: loadTex('Hair.png', true),
+      Dress: loadTex('Dress.png', true),
+      body: loadTex('body.png'),
+      broom: loadTex('broom.png', true),
+      Brooch: loadTex('brooch_3.png', true)
+    };
 
-    const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.08, 0.55, 12), sleeveMat);
-    sleeve.position.y = -0.3;
-    sleeve.castShadow = true;
-    armGroup.add(sleeve);
+    const loader = new FBXLoader();
+    loader.load(
+      'assets/elaina/elaina.fbx',
+      (fbx) => {
+        this.elainaMesh = fbx;
 
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 10), handMat);
-    hand.position.y = -0.6;
-    armGroup.add(hand);
+        // Bounding box scale calculation to 1.62m human height
+        const box = new THREE.Box3().setFromObject(fbx);
+        const size = new THREE.Vector3();
+        box.getSize(size);
 
-    return armGroup;
+        const targetHeight = 1.62;
+        const scaleFactor = targetHeight / (size.y || 1258);
+        fbx.scale.setScalar(scaleFactor);
+
+        // Center bottom feet on floor y = 0
+        const scaledBox = new THREE.Box3().setFromObject(fbx);
+        fbx.position.y = -scaledBox.min.y;
+
+        // Map textures & materials
+        fbx.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+
+            const applyMat = (mat) => {
+              if (!mat) return mat;
+              const name = mat.name.toLowerCase();
+
+              // Outlines
+              if (name.includes('outline')) {
+                return new THREE.MeshBasicMaterial({
+                  color: 0x1f1917,
+                  side: THREE.BackSide,
+                  transparent: true,
+                  opacity: 0.6
+                });
+              }
+
+              // Texture matching
+              let map = null;
+              if (name.includes('face')) map = textures.Face;
+              else if (name.includes('hair')) map = textures.Hair;
+              else if (name.includes('coat')) map = textures.Coat;
+              else if (name.includes('dress') || name.includes('cloth') || name.includes('shirt')) map = textures.Dress;
+              else if (name.includes('body') || name.includes('skin')) map = textures.body;
+              else if (name.includes('broom') || name.includes('wand')) map = textures.broom;
+              else if (name.includes('brooch')) map = textures.Brooch;
+              else map = textures.Coat;
+
+              return new THREE.MeshStandardMaterial({
+                map: map,
+                roughness: 0.55,
+                metalness: 0.05,
+                alphaTest: 0.5,
+                transparent: true
+              });
+            };
+
+            if (Array.isArray(child.material)) {
+              child.material = child.material.map(applyMat);
+            } else {
+              child.material = applyMat(child.material);
+            }
+          }
+
+          // Cache critical skeleton bones for procedural animation
+          if (child.isBone) {
+            const bName = child.name;
+            this.bones[bName] = child;
+            this.initBoneRotations[bName] = child.rotation.clone();
+          }
+        });
+
+        // Natural rest pose: gently lower arms from horizontal T-pose down to sides
+        this.relaxRestPose();
+
+        this.group.add(fbx);
+        this.isLoaded = true;
+      },
+      undefined,
+      (err) => {
+        console.error('Failed to load Elaina FBX:', err);
+      }
+    );
   }
 
-  buildLeg(side, pantsMat, soleMat, upperMat) {
-    const legGroup = new THREE.Group();
-    legGroup.position.set(side * 0.18, 0.95, 0);
-
-    const legMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.095, 0.85, 12), pantsMat);
-    legMesh.position.y = -0.42;
-    legMesh.castShadow = true;
-    legGroup.add(legMesh);
-
-    const shoe = new THREE.Group();
-    shoe.position.set(0, -0.88, 0.06);
-
-    const sole = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.08, 0.42), soleMat);
-    sole.position.y = 0.04;
-    shoe.add(sole);
-
-    const upper = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.36), upperMat);
-    upper.position.set(0, 0.13, -0.02);
-    shoe.add(upper);
-
-    legGroup.add(shoe);
-    return legGroup;
+  relaxRestPose() {
+    // Bring T-pose arms naturally down along the body
+    if (this.bones['Upper_Arm_L']) {
+      this.bones['Upper_Arm_L'].rotation.z = 1.25;
+      this.bones['Upper_Arm_L'].rotation.y = -0.15;
+    }
+    if (this.bones['Upper_Arm_R']) {
+      this.bones['Upper_Arm_R'].rotation.z = -1.25;
+      this.bones['Upper_Arm_R'].rotation.y = 0.15;
+    }
+    if (this.bones['Lower_Arm_L']) {
+      this.bones['Lower_Arm_L'].rotation.z = 0.2;
+    }
+    if (this.bones['Lower_Arm_R']) {
+      this.bones['Lower_Arm_R'].rotation.z = -0.2;
+    }
   }
 
   initKeyboard() {
@@ -253,7 +284,7 @@ export class PlayerController {
     });
 
     this.domElement.addEventListener('wheel', (e) => {
-      this.targetCamDistance = Math.max(2.4, Math.min(8.5, this.targetCamDistance + e.deltaY * 0.005));
+      this.targetCamDistance = Math.max(2.4, Math.min(8.0, this.targetCamDistance + e.deltaY * 0.005));
     }, { passive: true });
   }
 
@@ -348,39 +379,64 @@ export class PlayerController {
     this.group.rotation.y = this.rotation;
     this.shadowBlob.position.set(this.position.x, 0.015, this.position.z);
 
-    // Natural walk kinematics & Footstep sound synchronization
+    // Procedural Elaina Skeletal Animation
+    this.animateBones(isMoving, speed, dt);
+    this.updateCamera();
+  }
+
+  animateBones(isMoving, speed, dt) {
+    if (!this.isLoaded) return;
+
+    const now = performance.now() * 0.001;
+
     if (isMoving && this.isGrounded) {
       this.walkCycle += dt * speed * 2.5;
-      const armSwing = Math.sin(this.walkCycle) * 0.6;
+
       const legSwing = Math.sin(this.walkCycle) * 0.65;
+      const armSwing = Math.sin(this.walkCycle) * 0.55;
 
-      this.leftArm.rotation.x = -armSwing;
-      this.rightArm.rotation.x = armSwing;
-      this.leftLeg.rotation.x = legSwing;
-      this.rightLeg.rotation.x = -legSwing;
+      // Legs swing
+      if (this.bones['Upper_Leg_L']) this.bones['Upper_Leg_L'].rotation.x = legSwing;
+      if (this.bones['Upper_Leg_R']) this.bones['Upper_Leg_R'].rotation.x = -legSwing;
+      if (this.bones['Lower_Leg_L']) this.bones['Lower_Leg_L'].rotation.x = Math.max(0, -legSwing * 0.7);
+      if (this.bones['Lower_Leg_R']) this.bones['Lower_Leg_R'].rotation.x = Math.max(0, legSwing * 0.7);
 
-      this.torso.position.y = 1.35 + Math.abs(Math.sin(this.walkCycle * 2)) * 0.04;
-      this.head.position.y = 1.98 + Math.abs(Math.sin(this.walkCycle * 2)) * 0.03;
-      this.torso.rotation.z = Math.sin(this.walkCycle) * 0.03;
+      // Arms swing (modulated over resting pose)
+      if (this.bones['Upper_Arm_L']) this.bones['Upper_Arm_L'].rotation.x = -armSwing;
+      if (this.bones['Upper_Arm_R']) this.bones['Upper_Arm_R'].rotation.x = armSwing;
 
-      // Footstep sound trigger when foot reaches lowest arc
+      // Spine & Hips gentle dynamic sway
+      if (this.bones['Spine']) this.bones['Spine'].rotation.z = Math.sin(this.walkCycle) * 0.04;
+      if (this.bones['Hips']) this.bones['Hips'].position.y = (Math.abs(Math.sin(this.walkCycle * 2)) * 0.03);
+
+      // Footstep audio trigger
       const currentStep = Math.floor(this.walkCycle / Math.PI);
       if (currentStep !== this.lastFootstepStep) {
         this.lastFootstepStep = currentStep;
         soundEngine.playFootstep('wood');
       }
     } else {
-      const breath = Math.sin(performance.now() * 0.003) * 0.015;
-      this.leftArm.rotation.x = THREE.MathUtils.lerp(this.leftArm.rotation.x, 0, 0.15);
-      this.rightArm.rotation.x = THREE.MathUtils.lerp(this.rightArm.rotation.x, 0, 0.15);
-      this.leftLeg.rotation.x = THREE.MathUtils.lerp(this.leftLeg.rotation.x, 0, 0.15);
-      this.rightLeg.rotation.x = THREE.MathUtils.lerp(this.rightLeg.rotation.x, 0, 0.15);
-      this.torso.position.y = THREE.MathUtils.lerp(this.torso.position.y, 1.35 + breath, 0.1);
-      this.head.position.y = THREE.MathUtils.lerp(this.head.position.y, 1.98 + breath * 1.5, 0.1);
-      this.torso.rotation.z = THREE.MathUtils.lerp(this.torso.rotation.z, 0, 0.1);
-    }
+      // Natural idle breathing pose
+      const breath = Math.sin(now * 2.2) * 0.025;
 
-    this.updateCamera();
+      if (this.bones['Spine']) {
+        this.bones['Spine'].rotation.x = breath;
+        this.bones['Spine'].rotation.z = THREE.MathUtils.lerp(this.bones['Spine'].rotation.z, 0, 0.1);
+      }
+      if (this.bones['Head']) {
+        this.bones['Head'].rotation.x = -breath * 0.5;
+      }
+
+      // Reset legs
+      if (this.bones['Upper_Leg_L']) this.bones['Upper_Leg_L'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_L'].rotation.x, 0, 0.15);
+      if (this.bones['Upper_Leg_R']) this.bones['Upper_Leg_R'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Leg_R'].rotation.x, 0, 0.15);
+      if (this.bones['Lower_Leg_L']) this.bones['Lower_Leg_L'].rotation.x = THREE.MathUtils.lerp(this.bones['Lower_Leg_L'].rotation.x, 0, 0.15);
+      if (this.bones['Lower_Leg_R']) this.bones['Lower_Leg_R'].rotation.x = THREE.MathUtils.lerp(this.bones['Lower_Leg_R'].rotation.x, 0, 0.15);
+
+      // Reset arms to relaxed posture
+      if (this.bones['Upper_Arm_L']) this.bones['Upper_Arm_L'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Arm_L'].rotation.x, 0, 0.15);
+      if (this.bones['Upper_Arm_R']) this.bones['Upper_Arm_R'].rotation.x = THREE.MathUtils.lerp(this.bones['Upper_Arm_R'].rotation.x, 0, 0.15);
+    }
   }
 
   updateCamera() {
@@ -395,7 +451,7 @@ export class PlayerController {
 
     const desiredCamPos = this.position.clone().add(camOffset);
 
-    // Camera wall collision prevention (clamp inside bounds)
+    // Wall collision clamping
     desiredCamPos.x = Math.max(-13.2, Math.min(13.2, desiredCamPos.x));
     desiredCamPos.z = Math.max(-13.2, Math.min(13.2, desiredCamPos.z));
     desiredCamPos.y = Math.max(0.6, Math.min(7.2, desiredCamPos.y));

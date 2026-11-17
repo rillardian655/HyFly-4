@@ -1,20 +1,50 @@
-# HyFly-4: Contemporary 3D Architectural Residence and Virtual World
+# HyFly-4: Contemporary 3D Residence with Elaina Character Exploration
 
-HyFly-4 is an interactive three-dimensional virtual house and interior exploration application built for modern web browsers. Developed with Three.js WebGL rendering, Web Audio procedural synthesis, and modern HTML5 platform standards, the project features a controllable third-person casual avatar, a multi-room Scandinavian and Japandi architectural residence, interactive appliances, rotating ceiling fans, framed gallery art, synchronized footstep audio, and custom 3D brass typography displaying the creator credit "XIANLY RUNA".
+HyFly-4 is an interactive three-dimensional virtual house and interior exploration application built for modern web browsers. Developed with Three.js WebGL rendering, Web Audio procedural synthesis, and modern HTML5 platform standards, the project features Elaina (from Wandering Witch: The Journey of Elaina) as the playable 3D character avatar, a multi-room Scandinavian and Japandi architectural residence, interactive appliances, rotating ceiling fans, framed gallery art, synchronized footstep audio, and custom 3D brass typography displaying the creator credit "XIANLY RUNA".
 
 ---
 
-## Creator Information
+## Creator & Character Attribution
 
 * **Lead Architect and Designer:** xianly runa
 * **Display Name in Scene:** XIANLY RUNA (Rendered as 3D brushed champagne brass typography with warm gallery downlighting on the central feature wall)
+* **Playable Character Avatar:** Elaina (Wandering Witch / Majo no Tabitabi)
+* **Model Source:** Extracted and adapted from VRChat quest avatar asset package (`elaina-wandering-witch-vrchatquest-avatar.zip`)
 * **GitHub Repository:** https://github.com/rillardian655/HyFly-4
+
+---
+
+## Character Model & Kinematics Engine
+
+### 1. 3D Model Architecture
+* **Skeletal Rig:** 800+ node humanoid rig loaded via Three.js `FBXLoader` (`assets/elaina/elaina.fbx`).
+* **High-Resolution Textures:** Full PBR and cel-shaded material mapping with sRGB color space reproduction:
+  * `Coat.png`: Signature witch overcoat and wizard hat
+  * `Face.png`: Detailed expressive anime facial features
+  * `Hair.png`: Flowing ash-blonde hair with alpha transparency
+  * `Dress.png`: Pleated dress and inner garments
+  * `body.png`: Skin mesh details and boots
+  * `brooch_3.png`: Ornate golden witch guild brooch
+  * `broom.png`: Magic wand and staff accessories
+
+### 2. Procedural Animation System
+* **Resting Pose Calibration:** Modulates default T-pose arms into a natural relaxed posture alongside the coat.
+* **Locomotion Kinematics:** Dynamic leg swing, knee flexion, and arm swing synchronized with movement speed and sprint multipliers.
+* **Idle Breathing:** Continuous spine and head pitch oscillations simulating natural breathing.
+* **Synchronized Footstep Audio:** Real-time synthesis of hardwood floor contact sounds triggered on footfall down-beats.
+* **Jump Mechanics:** Jump impulse with takeoff sound, airborne leg tuck, gravitational acceleration, and landing sound effect.
+
+### 3. Third-Person Camera Rig
+* Spherical coordinate camera following Elaina with smooth interpolation.
+* Unconstrained horizontal mouse orbiting and vertical pitch clamping.
+* Boundary clamping to eliminate camera clipping through exterior residence walls.
+* Scroll wheel distance zoom with near and far clipping bounds.
 
 ---
 
 ## Architectural Layout and Interior Design
 
-The residence is structured across a 28m by 28m floor plan divided into four distinct interior zones and a central gallery corridor, utilizing light natural oak, white quartz, cream linen bouclé, and soft 2700K incandescent lighting:
+The residence is structured across a 28m by 28m floor plan divided into four interior zones and a central gallery corridor, utilizing light natural oak, white quartz, cream linen bouclé, and soft 2700K incandescent lighting:
 
 ### 1. Central Feature Wall & Corridor
 * Features a prominent 3D brushed champagne brass typography installation reading **"XIANLY RUNA"** mounted on an architectural plaster backplate with dedicated warm gallery downlights.
@@ -47,26 +77,7 @@ The residence is structured across a 28m by 28m floor plan divided into four dis
 ### 5. Master Bedroom Suite (South-East Zone)
 * **Platform Bed:** Low-profile solid oak platform bed with thick mattress, folded linen duvet, and plush sleeping pillows.
 * **Oak Nightstands:** Twin bedside tables with warm shaded night lamps.
-* **Interactive Resting:** Approaching the bed allows the player to lie down and rest with contextual camera framing.
-
----
-
-## Character Kinematics and Sound Engine
-
-### 1. Casual Player Avatar
-* Realistic, grounded character styling free of sci-fi or robotic elements: Cozy cream knit wool crewneck sweater, dark slate chino trousers, and clean white leather sneakers.
-* Procedural skeletal walk cycle: Dynamic arm and leg swinging synchronized to linear velocity and sprint multipliers.
-* Physics kinematics: Jump impulse calculation, gravitational acceleration, and ground contact detection.
-
-### 2. Synchronized Footstep Synthesis
-* Real-time audio generation triggering subtle hardwood contact impulses on footfall down-beats during walking and sprinting.
-* Jump takeoff audio impulse and landing impact sound effects.
-
-### 3. Third-Person Camera Rig
-* Spherical coordinate camera following the player avatar with smooth damping.
-* Horizontal mouse orbiting and vertical pitch clamping.
-* Boundary clamping to prevent camera clipping through exterior house walls.
-* Mouse wheel distance zoom with near and far clipping bounds.
+* **Interactive Resting:** Approaching the bed allows Elaina to lie down and rest with contextual camera framing.
 
 ---
 
@@ -94,7 +105,7 @@ The residence is structured across a 28m by 28m floor plan divided into four dis
 
 ### Interaction
 * **E Key or Left Click:** Trigger interaction when near an active object.
-* **Proximity HUD:** An on-screen prompt displays automatically whenever the player approaches an interactable appliance or device.
+* **Proximity HUD:** An on-screen prompt displays automatically whenever Elaina approaches an interactable appliance or device.
 
 ---
 
@@ -105,9 +116,13 @@ HyFly-4/
 ├── index.html          # HTML5 entry document, UI overlay, and modal templates
 ├── css/
 │   └── style.css       # Warm contemporary styling, HUD, and modal containment
+├── assets/
+│   └── elaina/         # Elaina 3D model and high-resolution textures
+│       ├── elaina.fbx  # Skinned humanoid FBX character model
+│       └── textures/   # 2K/4K Face, Hair, Coat, Dress, Body, and Broom textures
 ├── js/
 │   ├── main.js         # Game loop, proximity detection, and input coordinator
-│   ├── player.js       # Casual character avatar, walk kinematics, and camera rig
+│   ├── player.js       # Elaina character controller, bone kinematics, and camera rig
 │   ├── house.js        # Multi-room architecture, bedroom, furniture, and fans
 │   ├── text3d.js       # Vector-extruded 3D brass typography for "XIANLY RUNA"
 │   ├── textures.js     # Procedural oak, quartz, linen, art, and shadow textures

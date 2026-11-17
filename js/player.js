@@ -71,6 +71,7 @@ export class PlayerController {
     this.createPlaceholderProxy();
     this.loadElainaModel();
     this.initKeyboard();
+    this.initDPad();
     this.initMouseLook();
   }
 
@@ -285,60 +286,94 @@ export class PlayerController {
 
   initKeyboard() {
     window.addEventListener('keydown', (e) => {
-      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      const pcDialog = document.getElementById('pc-dialog');
+      if (pcDialog && pcDialog.open) return;
 
-      switch (e.code) {
-        case 'KeyW':
-        case 'ArrowUp':
-          this.keys.forward = true;
-          break;
-        case 'KeyS':
-        case 'ArrowDown':
-          this.keys.backward = true;
-          break;
-        case 'KeyA':
-        case 'ArrowLeft':
-          this.keys.left = true;
-          break;
-        case 'KeyD':
-        case 'ArrowRight':
-          this.keys.right = true;
-          break;
-        case 'Space':
-          this.keys.jump = true;
-          e.preventDefault();
-          break;
-        case 'ShiftLeft':
-        case 'ShiftRight':
-          this.keys.sprint = true;
-          break;
+      // Blur background inputs if modal is closed so game controls take priority
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+        document.activeElement.blur();
+      }
+
+      const code = e.code;
+      const key = (e.key || '').toLowerCase();
+
+      if (code === 'KeyW' || key === 'w' || code === 'ArrowUp') {
+        this.keys.forward = true;
+      } else if (code === 'KeyS' || key === 's' || code === 'ArrowDown') {
+        this.keys.backward = true;
+      } else if (code === 'KeyA' || key === 'a' || code === 'ArrowLeft') {
+        this.keys.left = true;
+      } else if (code === 'KeyD' || key === 'd' || code === 'ArrowRight') {
+        this.keys.right = true;
+      } else if (code === 'Space') {
+        this.keys.jump = true;
+        e.preventDefault();
+      } else if (code === 'ShiftLeft' || code === 'ShiftRight') {
+        this.keys.sprint = true;
       }
     });
 
     window.addEventListener('keyup', (e) => {
-      switch (e.code) {
-        case 'KeyW':
-        case 'ArrowUp':
-          this.keys.forward = false;
-          break;
-        case 'KeyS':
-        case 'ArrowDown':
-          this.keys.backward = false;
-          break;
-        case 'KeyA':
-          this.keys.left = false;
-          break;
-        case 'KeyD':
-          this.keys.right = false;
-          break;
-        case 'Space':
-          this.keys.jump = false;
-          break;
-        case 'ShiftLeft':
-        case 'ShiftRight':
-          this.keys.sprint = false;
-          break;
+      const code = e.code;
+      const key = (e.key || '').toLowerCase();
+
+      if (code === 'KeyW' || key === 'w' || code === 'ArrowUp') {
+        this.keys.forward = false;
+      } else if (code === 'KeyS' || key === 's' || code === 'ArrowDown') {
+        this.keys.backward = false;
+      } else if (code === 'KeyA' || key === 'a' || code === 'ArrowLeft') {
+        this.keys.left = false;
+      } else if (code === 'KeyD' || key === 'd' || code === 'ArrowRight') {
+        this.keys.right = false;
+      } else if (code === 'Space') {
+        this.keys.jump = false;
+      } else if (code === 'ShiftLeft' || code === 'ShiftRight') {
+        this.keys.sprint = false;
       }
+    });
+  }
+
+  initDPad() {
+    const dpad = document.getElementById('dpad-container');
+    if (!dpad) return;
+
+    const handlePress = (target, isPressed) => {
+      const btn = target.closest('.dpad-btn');
+      if (!btn) return;
+      const key = btn.dataset.key;
+      if (!key) return;
+
+      if (isPressed) {
+        btn.classList.add('pressed');
+        if (key === 'forward') this.keys.forward = true;
+        else if (key === 'backward') this.keys.backward = true;
+        else if (key === 'left') this.keys.left = true;
+        else if (key === 'right') this.keys.right = true;
+        else if (key === 'jump') this.keys.jump = true;
+      } else {
+        btn.classList.remove('pressed');
+        if (key === 'forward') this.keys.forward = false;
+        else if (key === 'backward') this.keys.backward = false;
+        else if (key === 'left') this.keys.left = false;
+        else if (key === 'right') this.keys.right = false;
+        else if (key === 'jump') this.keys.jump = false;
+      }
+    };
+
+    dpad.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handlePress(e.target, true);
+    });
+
+    window.addEventListener('pointerup', () => {
+      const pressedBtns = dpad.querySelectorAll('.dpad-btn.pressed');
+      pressedBtns.forEach(btn => handlePress(btn, false));
+    });
+
+    dpad.addEventListener('pointerleave', () => {
+      const pressedBtns = dpad.querySelectorAll('.dpad-btn.pressed');
+      pressedBtns.forEach(btn => handlePress(btn, false));
     });
   }
 
@@ -383,7 +418,7 @@ export class PlayerController {
 
     if (isMoving) {
       const forward = new THREE.Vector3(-Math.sin(this.camAngleX), 0, -Math.cos(this.camAngleX));
-      const right = new THREE.Vector3(forward.z, 0, -forward.x);
+      const right = new THREE.Vector3(-forward.z, 0, forward.x);
 
       const moveDir = new THREE.Vector3()
         .addScaledVector(forward, moveZ)
@@ -471,7 +506,27 @@ export class PlayerController {
   }
 
   animateBones(isMoving, speed, dt) {
-    if (!this.isLoaded) return;
+    if (!this.isLoaded) {
+      if (this.proxyGroup) {
+        const now = performance.now() * 0.001;
+        if (isMoving) {
+          this.walkCycle += dt * speed * 2.5;
+          this.proxyGroup.position.y = Math.abs(Math.sin(this.walkCycle * 2)) * 0.06;
+          this.proxyGroup.rotation.z = Math.sin(this.walkCycle) * 0.05;
+          this.proxyGroup.rotation.x = 0.06;
+          const currentStep = Math.floor(this.walkCycle / Math.PI);
+          if (currentStep !== this.lastFootstepStep) {
+            this.lastFootstepStep = currentStep;
+            soundEngine.playFootstep('wood');
+          }
+        } else {
+          this.proxyGroup.position.y = THREE.MathUtils.lerp(this.proxyGroup.position.y, 0, 0.1);
+          this.proxyGroup.rotation.z = THREE.MathUtils.lerp(this.proxyGroup.rotation.z, 0, 0.1);
+          this.proxyGroup.rotation.x = Math.sin(now * 2.2) * 0.02;
+        }
+      }
+      return;
+    }
 
     const now = performance.now() * 0.001;
 

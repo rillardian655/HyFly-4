@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HyFly-4 // Interactive 3D Virtual House & World</title>
-  <link rel="stylesheet" href="css/style.css?v=3.0">
+  <link rel="stylesheet" href="css/style.css?v=4.0">
   
   <script type="importmap">
   {
@@ -18,7 +18,7 @@
 <body>
   <!-- 3D Canvas Container -->
   <div id="canvas-container">
-    <canvas id="webgl-canvas"></canvas>
+    <canvas id="webgl-canvas" tabindex="0"></canvas>
   </div>
 
   <!-- UI Overlay -->
@@ -53,6 +53,21 @@
 
     <!-- Proximity Interaction Prompt [E] -->
     <div id="interaction-prompt" class="interaction-prompt">[E] Interaksi</div>
+
+    <!-- On-screen Navigation Controls (Click / Touch) -->
+    <div id="dpad-container" class="dpad-container">
+      <div class="dpad-row">
+        <button type="button" class="dpad-btn" data-key="forward" aria-label="Walk Forward">▲</button>
+      </div>
+      <div class="dpad-row">
+        <button type="button" class="dpad-btn" data-key="left" aria-label="Move Left">◀</button>
+        <button type="button" class="dpad-btn jump-btn" data-key="jump" aria-label="Jump">JUMP</button>
+        <button type="button" class="dpad-btn" data-key="right" aria-label="Move Right">▶</button>
+      </div>
+      <div class="dpad-row">
+        <button type="button" class="dpad-btn" data-key="backward" aria-label="Walk Backward">▼</button>
+      </div>
+    </div>
 
     <!-- Notification Toasts -->
     <div id="toast-container" class="toast-container"></div>
@@ -94,7 +109,7 @@
         <div id="terminal-output" class="terminal-output"></div>
         <div class="terminal-prompt-row">
           <span class="terminal-prompt">hyfly@workstation:~$</span>
-          <input type="text" id="terminal-input" class="terminal-input" autocomplete="off" spellcheck="false" placeholder="Type 'help' for command manual..." autofocus>
+          <input type="text" id="terminal-input" class="terminal-input" autocomplete="off" spellcheck="false" placeholder="Type 'help' for command manual...">
         </div>
       </section>
 
@@ -134,6 +149,6 @@
   </dialog>
 
   <!-- Main Orchestrator Script -->
-  <script type="module" src="js/main.js?v=3.0"></script>
+  <script type="module" src="js/main.js?v=4.0"></script>
 </body>
 </html>

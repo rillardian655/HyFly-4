@@ -569,3 +569,72 @@ dialog::backdrop {
     grid-template-columns: 1fr;
   }
 }
+
+/* Canvas focus outline removal */
+#webgl-canvas:focus {
+  outline: none;
+}
+
+/* On-screen Directional Pad (Touch / Click) */
+.dpad-container {
+  position: absolute;
+  bottom: 5.5rem;
+  left: 1.5rem;
+  z-index: 25;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(24, 21, 18, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 0.5rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.dpad-row {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.dpad-btn {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.dpad-btn:hover {
+  background: rgba(212, 175, 55, 0.25);
+  border-color: rgba(212, 175, 55, 0.6);
+  transform: scale(1.04);
+}
+
+.dpad-btn:active,
+.dpad-btn.pressed {
+  background: rgba(212, 175, 55, 0.5);
+  border-color: #d4af37;
+  transform: scale(0.94);
+}
+
+.dpad-btn.jump-btn {
+  width: 54px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #d4af37;
+}

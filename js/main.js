@@ -147,6 +147,14 @@ function initApp() {
     }
   });
 
+  // Canvas click autofocus and input blur
+  canvas.addEventListener('pointerdown', () => {
+    canvas.focus();
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName) && !document.getElementById('pc-dialog')?.open) {
+      document.activeElement.blur();
+    }
+  });
+
   // Direct Click interaction
   window.addEventListener('pointerup', (e) => {
     if (e.target.closest('.ui-layer') || document.getElementById('pc-dialog')?.open) {

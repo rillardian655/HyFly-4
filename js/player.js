@@ -40,12 +40,13 @@ export class PlayerController {
     this.gravity = 22.0;
     this.jumpForce = 7.6;
 
-    // Camera follow parameters
-    this.camDistance = 4.4;
-    this.targetCamDistance = 4.4;
-    this.camHeight = 2.2;
+    // Camera follow parameters (Optimized for full-body view of Elaina)
+    this.camDistance = 3.6;
+    this.targetCamDistance = 3.6;
+    this.camHeight = 1.0;
     this.camAngleX = 0;
-    this.camAngleY = 0.24;
+    this.camAngleY = 0.28;
+    this.cameraMode = 'full'; // 'full' | 'topdown' | 'closeup'
 
     this.colliders = [];
 
@@ -379,6 +380,8 @@ export class PlayerController {
         this.playEmote('cast');
       } else if (code === 'Digit3' || code === 'KeyF') {
         this.toggleFlight();
+      } else if (code === 'KeyV') {
+        this.cycleCameraView();
       }
     });
 
@@ -451,8 +454,8 @@ export class PlayerController {
     let prevX = 0;
     let prevY = 0;
 
-    this.domElement.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('.ui-layer') || document.getElementById('pc-dialog')?.open) return;
+    window.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button, input, textarea, dialog, .modal-dialog') || document.getElementById('pc-dialog')?.open) return;
       isDragging = true;
       prevX = e.clientX;
       prevY = e.clientY;
@@ -465,17 +468,48 @@ export class PlayerController {
       prevX = e.clientX;
       prevY = e.clientY;
 
+      // Horizontal orbit around character
       this.camAngleX -= dx * 0.005;
-      this.camAngleY = Math.max(0.06, Math.min(1.15, this.camAngleY + dy * 0.004));
+
+      // Vertical pitch: Moving mouse UP raises camera to look down at character, moving mouse DOWN lowers camera
+      this.camAngleY = THREE.MathUtils.clamp(this.camAngleY - dy * 0.005, -0.28, 1.38);
     });
 
     window.addEventListener('pointerup', () => {
       isDragging = false;
     });
 
-    this.domElement.addEventListener('wheel', (e) => {
-      this.targetCamDistance = Math.max(2.4, Math.min(8.0, this.targetCamDistance + e.deltaY * 0.005));
+    window.addEventListener('pointercancel', () => {
+      isDragging = false;
+    });
+
+    // Smooth scroll wheel zoom
+    window.addEventListener('wheel', (e) => {
+      if (document.getElementById('pc-dialog')?.open) return;
+      this.targetCamDistance = THREE.MathUtils.clamp(this.targetCamDistance + e.deltaY * 0.003, 1.5, 7.5);
     }, { passive: true });
+  }
+
+  cycleCameraView() {
+    const modes = ['full', 'topdown', 'closeup'];
+    const nextIdx = (modes.indexOf(this.cameraMode) + 1) % modes.length;
+    this.cameraMode = modes[nextIdx];
+
+    if (this.cameraMode === 'full') {
+      this.targetCamDistance = 3.6;
+      this.camAngleY = 0.28;
+      this.camHeight = 1.0;
+    } else if (this.cameraMode === 'topdown') {
+      this.targetCamDistance = 4.4;
+      this.camAngleY = 1.18; // Looking down from above
+      this.camHeight = 1.2;
+    } else if (this.cameraMode === 'closeup') {
+      this.targetCamDistance = 1.9;
+      this.camAngleY = 0.12;
+      this.camHeight = 0.85;
+    }
+    soundEngine.playChime();
+    return this.cameraMode;
   }
 
   playEmote(type) {
@@ -855,12 +889,15 @@ export class PlayerController {
 
   updateCamera() {
     this.camDistance = THREE.MathUtils.lerp(this.camDistance, this.targetCamDistance, 0.1);
-    const targetLook = this.position.clone().add(new THREE.Vector3(0, 1.45, 0));
+    
+    // Target her torso center (y = 0.92m) so the entire character head-to-toe is beautifully centered
+    const targetLook = this.position.clone().add(new THREE.Vector3(0, 0.92, 0));
 
+    const horizDist = Math.cos(this.camAngleY) * this.camDistance;
     const camOffset = new THREE.Vector3(
-      Math.sin(this.camAngleX) * Math.cos(this.camAngleY) * this.camDistance,
+      Math.sin(this.camAngleX) * horizDist,
       Math.sin(this.camAngleY) * this.camDistance + this.camHeight,
-      Math.cos(this.camAngleX) * Math.cos(this.camAngleY) * this.camDistance
+      Math.cos(this.camAngleX) * horizDist
     );
 
     const desiredCamPos = this.position.clone().add(camOffset);
@@ -868,9 +905,9 @@ export class PlayerController {
     // Wall collision clamping
     desiredCamPos.x = Math.max(-13.2, Math.min(13.2, desiredCamPos.x));
     desiredCamPos.z = Math.max(-13.2, Math.min(13.2, desiredCamPos.z));
-    desiredCamPos.y = Math.max(0.6, Math.min(7.2, desiredCamPos.y));
+    desiredCamPos.y = Math.max(0.35, Math.min(7.2, desiredCamPos.y));
 
-    this.camera.position.lerp(desiredCamPos, 0.12);
+    this.camera.position.lerp(desiredCamPos, 0.14);
     this.camera.lookAt(targetLook);
   }
 }

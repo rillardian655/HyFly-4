@@ -3,12 +3,12 @@
  * Multi-Room House Exploration Game & 3D Interactive Hub
  */
 import * as THREE from 'three';
-import { SceneManager } from './scene.js?v=9.0';
-import { HouseBuilder } from './house.js?v=9.0';
-import { PlayerController } from './player.js?v=9.0';
-import { VirtualTerminal } from './terminal.js?v=9.0';
-import { UIManager } from './ui.js?v=9.0';
-import { soundEngine } from './audio.js?v=9.0';
+import { SceneManager } from './scene.js?v=10.0';
+import { HouseBuilder } from './house.js?v=10.0';
+import { PlayerController } from './player.js?v=10.0';
+import { VirtualTerminal } from './terminal.js?v=10.0';
+import { UIManager } from './ui.js?v=10.0';
+import { soundEngine } from './audio.js?v=10.0';
 
 function initApp() {
   const canvas = document.getElementById('webgl-canvas');
@@ -186,6 +186,35 @@ function initApp() {
       ui.showToast(player.isFlying ? 'Broom Flight Mode: Fly freely with WASD + Space!' : 'Landed safely on feet');
     });
   }
+
+  // Camera View Toggle Button
+  const btnCamera = document.getElementById('btn-camera');
+  function updateCameraBtnLabel(mode) {
+    if (!btnCamera) return;
+    const labels = {
+      full: 'Cam: Full Body',
+      topdown: 'Cam: Top Down',
+      closeup: 'Cam: Close Up'
+    };
+    btnCamera.textContent = labels[mode] || 'Cam: Full Body';
+  }
+
+  if (btnCamera) {
+    btnCamera.addEventListener('click', () => {
+      const mode = player.cycleCameraView();
+      updateCameraBtnLabel(mode);
+      ui.showToast(`Camera View: ${mode.toUpperCase()}`);
+    });
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyV' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+      setTimeout(() => {
+        updateCameraBtnLabel(player.cameraMode);
+        ui.showToast(`Camera View: ${player.cameraMode.toUpperCase()}`);
+      }, 30);
+    }
+  });
 
   // Canvas click autofocus and input blur
   canvas.addEventListener('pointerdown', () => {

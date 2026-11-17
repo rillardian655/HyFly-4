@@ -260,7 +260,7 @@ export class PlayerController {
         });
 
         // Initialize relaxed arms hanging naturally at her sides upon spawn (no T-pose)
-        const spawnArmRestX = 0.20;
+        const spawnArmRestX = 1.05;
         if (this.rootBones['Upper_Arm_L'] && this.initBoneRotations['Upper_Arm_L']) {
           this.rootBones['Upper_Arm_L'].rotation.x = this.initBoneRotations['Upper_Arm_L'].x + spawnArmRestX;
         }
@@ -689,7 +689,7 @@ export class PlayerController {
     }
 
     // Gentle natural arm rest angle (hangs naturally beside her body, NO folded arms or T-pose)
-    const armRestX = 0.20;
+    const armRestX = 1.05;
     const baseArmLX = this.initBoneRotations['Upper_Arm_L']?.x ?? 0.157;
     const baseArmLZ = this.initBoneRotations['Upper_Arm_L']?.z ?? 0.068;
     const baseArmRX = this.initBoneRotations['Upper_Arm_R']?.x ?? 0.157;
@@ -720,11 +720,11 @@ export class PlayerController {
       }
 
       // Hands grip broom handle
-      this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + 0.18, 0.2);
+      this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + 0.35, 0.2);
       this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ + 0.35, 0.2);
       this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ, 0.2);
 
-      this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + 0.18, 0.2);
+      this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + 0.35, 0.2);
       this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ - 0.35, 0.2);
       this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ, 0.2);
 
@@ -759,19 +759,19 @@ export class PlayerController {
       this.modelContainer.rotation.x = THREE.MathUtils.lerp(this.modelContainer.rotation.x, forwardLean, 0.2);
       this.modelContainer.rotation.z = THREE.MathUtils.lerp(this.modelContainer.rotation.z, strideRoll + turnBank, 0.2);
 
-      // 2. Active Arm Swing Kinematics (Natural human swing forward & back alongside hips)
-      const armSwingAmp = 0.32 * strideSpeed;
+      // 2. Active Arm Swing Kinematics (Natural human alternating swing forward & back alongside hips)
+      const armSwingAmp = 0.35 * strideSpeed;
       const armSwing = stepPhase * armSwingAmp;
 
       if (!this.currentEmote) {
-        // Left arm: armRestX keeps it at her side, armSwing moves forward (+Z) and back (-Z)
+        // Left arm: armRestX keeps it at her side, swings forward (+Z) and back (-Z)
         this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + armRestX, 0.3);
         this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ - armSwing, 0.3);
         this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ, 0.3);
 
-        // Right arm: armRestX keeps it at her side, armSwing moves forward (+Z) and back (-Z)
+        // Right arm: swings opposite to left arm (+armSwing vs -armSwing)
         this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + armRestX, 0.3);
-        this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ - armSwing, 0.3);
+        this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ + armSwing, 0.3);
         this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ, 0.3);
       }
 

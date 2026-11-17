@@ -17,34 +17,28 @@ HyFly-4 is an interactive three-dimensional virtual house and interior explorati
 ## Character Model & Kinematics Engine
 
 ### 1. 3D Model Architecture
-* **Skeletal Rig:** 800+ node humanoid rig loaded via Three.js `FBXLoader` (`assets/elaina/elaina.fbx`).
-* **High-Resolution Textures:** Full PBR and cel-shaded material mapping with sRGB color space reproduction:
+* **Model Asset Architecture:** High-definition PC character model extracted from the authentic release package (`elaina_pc.fbx`, `wand.fbx`, `broom.fbx`).
+* **High-Resolution Anime Textures:** 2K/4K cel-shaded texture mapping:
   * `Coat.png`: Signature witch overcoat and wizard hat
   * `Face.png`: Detailed expressive anime facial features
   * `Hair.png`: Flowing ash-blonde hair with alpha transparency
   * `Dress.png`: Pleated dress and inner garments
-  * `body.png`: Skin mesh details and boots
-  * `brooch_3.png`: Ornate golden witch guild brooch
-  * `broom.png`: Magic wand and staff accessories
+  * `Body.png`: Cel-shaded skin and leather boots
+  * `Brooch.png`: Golden witch guild brooch
+  * `Broom_Wand.png`: Authentic wand and broomstick texture mapping
 
-### 2. Procedural Animation System & Multi-Mesh Kinematics
-* **Unified Multi-Skeleton Coordination:** Automatically groups and synchronizes identical bone nodes across all seven distinct SkinnedMeshes (Body, Skirt, Coat, Shirt, Hair, Head, Hat) so leg, arm, and torso movements deform all mesh layers in unison.
-* **Full Humanoid Leg Kinematics:** Dynamic upper thigh swing, realistic rearward knee bending (Lower Leg flexion), ankle landing angle adjustment, and toe takeoff rotation.
-* **Hip Bobbing and Pelvis Sway:** Vertical bounce (0.05m stride oscillation) and lateral pelvic roll synchronized with gait frequency, generating realistic body weight transfer.
-* **Spine Counter-Rotation & Breathing:** Upper torso counter-rotates against hip swing during locomotion and demonstrates rhythmic natural chest expansion while idle.
-* **Secondary Anime Motion Dynamics:**
-  * Flowing multi-stage hair wave physics along the rear locks and side braids.
-  * Witch hat tip oscillation responding to movement velocity and stride impacts.
-  * Dynamic skirt and coat-tail flutter adjusting to leg swings and speed.
+### 2. Locomotion Kinematics & Motion Engine
+* **Fluid Stride Bobbing:** Vertical oscillation (0.055m stride bounce) and lateral sway synchronized with movement speed, producing natural weight transfer.
+* **Locomotion Lean & Turning Bank:** Subtle forward inclination during motion and lateral banking into turns for realistic momentum.
+* **Natural Rest Posture:** Preserves the authentic relaxed A-pose of the original 3D avatar with arms resting naturally at her sides.
+* **Dynamic Accessory Sway:** The slung broomstick and wand gently sway in sync with stride momentum.
+* **Idle Breathing:** Continuous subtle vertical breathing cycle and gentle weight-shift oscillations while stationary.
 * **Synchronized Footstep Audio:** Real-time synthesis of hardwood floor contact sounds triggered on footfall down-beats.
-* **Jump Mechanics:** Takeoff impulse audio, airborne knee tuck, gravitational acceleration, and impact sound on landing.
+* **Jump Mechanics:** Takeoff impulse audio, gravitational acceleration, and landing sound effect.
 
-### 3. Integrated Accessories
-* **Witch Magic Wand:** Handcrafted dark mahogany wand with spiraling brass filigree, golden star finial, and an illuminated cyan crystal gem casting active dynamic point lighting. Attached to the right wrist.
-* **Signature Witch Broomstick:** Slung diagonally across Elaina's back with gold satin ribbon wrap and natural straw bristles.
-* **Adventurer Travel Satchel & Potions:** Leather adventurer hip pouch equipped with brass buckles and twin alchemical potion vials (glowing cyan mana elixir and amethyst health tonic).
-* **Floating Arcane Grimoire:** Ornate leather-bound spellbook with gilded page edges and a glowing celestial sigil hovering alongside her left side, gently bobbing and rotating in levitation.
-* **Magical Stardust Mana Particles:** Swirling stardust motes orbiting her path.
+### 3. Authentic Accessories
+* **Official Witch Magic Wand:** Loaded from `wand.fbx` with `Broom_Wand.png` texture, positioned naturally at her right hand.
+* **Official Signature Broomstick:** Loaded from `broom.fbx` with `Broom_Wand.png` texture, slung diagonally across her back.
 
 ### 4. Third-Person Camera Rig
 * Spherical coordinate camera following Elaina with smooth interpolation.

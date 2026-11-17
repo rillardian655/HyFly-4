@@ -2,6 +2,7 @@
  * Main Application Orchestrator for HyFly-4
  * Multi-Room House Exploration Game & 3D Interactive Hub
  */
+import * as THREE from 'three';
 import { SceneManager } from './scene.js';
 import { HouseBuilder } from './house.js';
 import { PlayerController } from './player.js';
@@ -31,13 +32,13 @@ window.addEventListener('DOMContentLoaded', () => {
   // Proximity interaction state
   let nearbyObject = null;
   const promptEl = document.getElementById('interaction-prompt');
+  const worldPos = new THREE.Vector3();
 
   function checkProximity() {
     let closestObj = null;
     let closestDist = 3.2;
 
     for (const obj of houseData.interactive) {
-      const worldPos = new THREE.Vector3();
       obj.getWorldPosition(worldPos);
       const dist = player.position.distanceTo(worldPos);
       if (dist < closestDist) {

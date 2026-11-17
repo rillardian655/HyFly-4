@@ -153,3 +153,4 @@ export function create3DNameBanner(text = "XIANLY RUNA", position = new THREE.Ve
 
   return group;
 }
+

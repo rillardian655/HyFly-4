@@ -67,9 +67,82 @@ export class PlayerController {
     this.shadowBlob.position.y = 0.015;
     this.scene.add(this.shadowBlob);
 
+    this.proxyGroup = null;
+    this.createPlaceholderProxy();
     this.loadElainaModel();
     this.initKeyboard();
     this.initMouseLook();
+  }
+
+  createPlaceholderProxy() {
+    this.proxyGroup = new THREE.Group();
+
+    // Body/Coat
+    const coatMat = new THREE.MeshStandardMaterial({
+      color: 0x242230,
+      roughness: 0.6
+    });
+    const bodyGeo = new THREE.CylinderGeometry(0.16, 0.32, 0.85, 16);
+    const bodyMesh = new THREE.Mesh(bodyGeo, coatMat);
+    bodyMesh.position.y = 0.85;
+    this.proxyGroup.add(bodyMesh);
+
+    // Inner White Skirt
+    const dressMat = new THREE.MeshStandardMaterial({
+      color: 0xf5f3f0,
+      roughness: 0.7
+    });
+    const skirtGeo = new THREE.ConeGeometry(0.36, 0.58, 16);
+    const skirtMesh = new THREE.Mesh(skirtGeo, dressMat);
+    skirtMesh.position.y = 0.52;
+    this.proxyGroup.add(skirtMesh);
+
+    // Head
+    const skinMat = new THREE.MeshStandardMaterial({
+      color: 0xffe2c4,
+      roughness: 0.5
+    });
+    const headGeo = new THREE.SphereGeometry(0.16, 16, 16);
+    const headMesh = new THREE.Mesh(headGeo, skinMat);
+    headMesh.position.y = 1.42;
+    this.proxyGroup.add(headMesh);
+
+    // Ash/Silver Hair (Elaina signature)
+    const hairMat = new THREE.MeshStandardMaterial({
+      color: 0xe6e4e8,
+      roughness: 0.5
+    });
+    const hairGeo = new THREE.SphereGeometry(0.18, 16, 16);
+    hairGeo.scale(1, 1.25, 1.1);
+    const hairMesh = new THREE.Mesh(hairGeo, hairMat);
+    hairMesh.position.set(0, 1.44, -0.04);
+    this.proxyGroup.add(hairMesh);
+
+    // Witch Hat
+    const hatMat = new THREE.MeshStandardMaterial({
+      color: 0x1f1d28,
+      roughness: 0.6
+    });
+    const brimGeo = new THREE.CylinderGeometry(0.48, 0.48, 0.03, 24);
+    const brimMesh = new THREE.Mesh(brimGeo, hatMat);
+    brimMesh.position.y = 1.56;
+    brimMesh.rotation.x = 0.08;
+    this.proxyGroup.add(brimMesh);
+
+    const coneGeo = new THREE.ConeGeometry(0.24, 0.45, 16);
+    const coneMesh = new THREE.Mesh(coneGeo, hatMat);
+    coneMesh.position.set(0, 1.78, -0.04);
+    coneMesh.rotation.x = -0.15;
+    this.proxyGroup.add(coneMesh);
+
+    this.proxyGroup.traverse((c) => {
+      if (c.isMesh) {
+        c.castShadow = true;
+        c.receiveShadow = true;
+      }
+    });
+
+    this.group.add(this.proxyGroup);
   }
 
   loadElainaModel() {
@@ -99,17 +172,21 @@ export class PlayerController {
         this.elainaMesh = fbx;
 
         // Bounding box scale calculation to 1.62m human height
+        fbx.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(fbx);
         const size = new THREE.Vector3();
         box.getSize(size);
 
         const targetHeight = 1.62;
-        const scaleFactor = targetHeight / (size.y || 1258);
+        const scaleFactor = (size.y > 0.01 && Number.isFinite(size.y)) ? (targetHeight / size.y) : 0.00128;
         fbx.scale.setScalar(scaleFactor);
+        fbx.updateMatrixWorld(true);
 
         // Center bottom feet on floor y = 0
         const scaledBox = new THREE.Box3().setFromObject(fbx);
-        fbx.position.y = -scaledBox.min.y;
+        if (Number.isFinite(scaledBox.min.y)) {
+          fbx.position.y = -scaledBox.min.y;
+        }
 
         // Map textures & materials
         fbx.traverse((child) => {
@@ -119,7 +196,7 @@ export class PlayerController {
 
             const applyMat = (mat) => {
               if (!mat) return mat;
-              const name = mat.name.toLowerCase();
+              const name = (mat.name || '').toLowerCase();
 
               // Outlines
               if (name.includes('outline')) {
@@ -127,27 +204,30 @@ export class PlayerController {
                   color: 0x1f1917,
                   side: THREE.BackSide,
                   transparent: true,
-                  opacity: 0.6
+                  opacity: 0.6,
+                  depthWrite: true
                 });
               }
 
               // Texture matching
               let map = null;
-              if (name.includes('face')) map = textures.Face;
-              else if (name.includes('hair')) map = textures.Hair;
-              else if (name.includes('coat')) map = textures.Coat;
-              else if (name.includes('dress') || name.includes('cloth') || name.includes('shirt')) map = textures.Dress;
-              else if (name.includes('body') || name.includes('skin')) map = textures.body;
-              else if (name.includes('broom') || name.includes('wand')) map = textures.broom;
-              else if (name.includes('brooch')) map = textures.Brooch;
-              else map = textures.Coat;
+              let isAlpha = false;
+              if (name.includes('face')) { map = textures.Face; }
+              else if (name.includes('hair')) { map = textures.Hair; isAlpha = true; }
+              else if (name.includes('coat')) { map = textures.Coat; }
+              else if (name.includes('dress') || name.includes('cloth') || name.includes('shirt') || name.includes('skirt')) { map = textures.Dress; }
+              else if (name.includes('body') || name.includes('skin')) { map = textures.body; }
+              else if (name.includes('broom') || name.includes('wand')) { map = textures.broom; isAlpha = true; }
+              else if (name.includes('brooch')) { map = textures.Brooch; isAlpha = true; }
+              else { map = textures.Coat; }
 
               return new THREE.MeshStandardMaterial({
                 map: map,
-                roughness: 0.55,
+                roughness: 0.6,
                 metalness: 0.05,
-                alphaTest: 0.5,
-                transparent: true
+                alphaTest: isAlpha ? 0.45 : 0.0,
+                transparent: isAlpha,
+                depthWrite: true
               });
             };
 
@@ -169,12 +249,18 @@ export class PlayerController {
         // Natural rest pose: gently lower arms from horizontal T-pose down to sides
         this.relaxRestPose();
 
+        // Remove proxy mesh and add full FBX avatar
+        if (this.proxyGroup) {
+          this.group.remove(this.proxyGroup);
+          this.proxyGroup = null;
+        }
+
         this.group.add(fbx);
         this.isLoaded = true;
       },
       undefined,
       (err) => {
-        console.error('Failed to load Elaina FBX:', err);
+        console.error('Failed to load Elaina FBX, keeping placeholder proxy:', err);
       }
     );
   }

@@ -10,9 +10,20 @@ import { VirtualTerminal } from './terminal.js';
 import { UIManager } from './ui.js';
 import { soundEngine } from './audio.js';
 
-window.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   const canvas = document.getElementById('webgl-canvas');
-  const sceneMgr = new SceneManager(canvas);
+  if (!canvas) {
+    console.error('Canvas #webgl-canvas element not found');
+    return;
+  }
+
+  let sceneMgr;
+  try {
+    sceneMgr = new SceneManager(canvas);
+  } catch (err) {
+    console.error('Error initializing SceneManager / WebGL:', err);
+    return;
+  }
 
   // Build the whole house
   const houseBuilder = new HouseBuilder(sceneMgr.scene);
@@ -178,4 +189,11 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   requestAnimationFrame(animate);
-});
+}
+
+// Ensure execution whether loaded before or after DOMContentLoaded
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}

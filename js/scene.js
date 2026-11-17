@@ -1,6 +1,6 @@
 /**
- * Scene Manager & 3D Lighting Environment for HyFly-4
- * Enhanced for full multi-room house scale (28m x 28m)
+ * Natural Warm Scene Manager & Lighting for HyFly-4
+ * Scandinavian & Japandi contemporary lighting scheme.
  */
 import * as THREE from 'three';
 
@@ -15,24 +15,22 @@ export class SceneManager {
     this.sunLight = null;
     this.stars = null;
 
-    // Raycasting
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
     this.interactiveObjects = [];
 
-    // Environment modes: 'night', 'day', 'sunset'
-    this.envMode = 'night';
+    this.envMode = 'day'; // Default to a gorgeous warm bright day!
 
     this.init();
   }
 
   init() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x060913);
+    this.scene.background = new THREE.Color(0xbde0fe);
 
     const aspect = window.innerWidth / window.innerHeight;
-    this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 150);
-    this.camera.position.set(0, 3.5, 6.0);
+    this.camera = new THREE.PerspectiveCamera(48, aspect, 0.1, 150);
+    this.camera.position.set(0, 3.2, 5.8);
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
@@ -44,21 +42,22 @@ export class SceneManager {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.0;
+    this.renderer.toneMappingExposure = 1.05;
 
     this.setupLighting();
     this.setupStars();
-    this.setEnvironmentMode('night');
+    this.setEnvironmentMode('day');
 
     window.addEventListener('resize', () => this.onResize());
   }
 
   setupLighting() {
-    this.ambientLight = new THREE.AmbientLight(0x1e293b, 0.45);
+    // Warm natural ambient bounce
+    this.ambientLight = new THREE.AmbientLight(0xfff5ea, 0.65);
     this.scene.add(this.ambientLight);
 
-    // Directional Sun/Moon light for the whole house
-    this.sunLight = new THREE.DirectionalLight(0xffedd5, 1.2);
+    // Warm Sunbeam directional light
+    this.sunLight = new THREE.DirectionalLight(0xfffaed, 1.6);
     this.sunLight.position.set(-16, 22, -10);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.width = 2048;
@@ -72,25 +71,22 @@ export class SceneManager {
     this.sunLight.shadow.bias = -0.0005;
     this.scene.add(this.sunLight);
 
-    // Ceiling chandeliers / ambient fill lights in key zones
-    // Living Room Ceiling Light
-    const livingLight = new THREE.PointLight(0xfef08a, 0.8, 16);
+    // Warm interior ceiling downlights (warm incandescent glow)
+    const livingLight = new THREE.PointLight(0xffeedd, 0.9, 16);
     livingLight.position.set(7.0, 6.5, -4.0);
     this.scene.add(livingLight);
 
-    // Kitchen Ceiling Light
-    const kitchenLight = new THREE.PointLight(0xe0f2fe, 0.8, 16);
+    const kitchenLight = new THREE.PointLight(0xfff3e6, 0.9, 16);
     kitchenLight.position.set(-7.0, 6.5, 7.0);
     this.scene.add(kitchenLight);
 
-    // Central Corridor Light
-    const corridorLight = new THREE.PointLight(0x38bdf8, 0.6, 14);
+    const corridorLight = new THREE.PointLight(0xfff0dd, 0.8, 14);
     corridorLight.position.set(0, 6.5, 0);
     this.scene.add(corridorLight);
   }
 
   setupStars() {
-    const starCount = 500;
+    const starCount = 400;
     const starGeo = new THREE.BufferGeometry();
     const positions = new Float32Array(starCount * 3);
 
@@ -105,7 +101,7 @@ export class SceneManager {
       color: 0xffffff,
       size: 0.08,
       transparent: true,
-      opacity: 0.85
+      opacity: 0.8
     });
 
     this.stars = new THREE.Points(starGeo, starMat);
@@ -116,29 +112,29 @@ export class SceneManager {
     this.envMode = mode;
     switch (mode) {
       case 'day':
-        this.scene.background.setHex(0x38bdf8);
-        this.ambientLight.color.setHex(0xe0f2fe);
-        this.ambientLight.intensity = 0.75;
-        this.sunLight.color.setHex(0xffffff);
+        this.scene.background.setHex(0x93c5fd); // Soft natural sky blue
+        this.ambientLight.color.setHex(0xfff8ee);
+        this.ambientLight.intensity = 0.85;
+        this.sunLight.color.setHex(0xfffaed);
         this.sunLight.intensity = 1.9;
         if (this.stars) this.stars.visible = false;
         break;
 
       case 'sunset':
-        this.scene.background.setHex(0x9a3412);
+        this.scene.background.setHex(0xf97316); // Golden hour sunset
         this.ambientLight.color.setHex(0xfed7aa);
-        this.ambientLight.intensity = 0.55;
-        this.sunLight.color.setHex(0xf97316);
-        this.sunLight.intensity = 1.5;
+        this.ambientLight.intensity = 0.7;
+        this.sunLight.color.setHex(0xfb923c);
+        this.sunLight.intensity = 1.7;
         if (this.stars) this.stars.visible = false;
         break;
 
       case 'night':
       default:
-        this.scene.background.setHex(0x060913);
-        this.ambientLight.color.setHex(0x1e293b);
-        this.ambientLight.intensity = 0.4;
-        this.sunLight.color.setHex(0x38bdf8);
+        this.scene.background.setHex(0x0f172a); // Deep cozy night
+        this.ambientLight.color.setHex(0x334155);
+        this.ambientLight.intensity = 0.45;
+        this.sunLight.color.setHex(0x94a3b8);
         this.sunLight.intensity = 0.5;
         if (this.stars) this.stars.visible = true;
         break;
@@ -147,7 +143,7 @@ export class SceneManager {
   }
 
   cycleEnvironment() {
-    const modes = ['night', 'day', 'sunset'];
+    const modes = ['day', 'sunset', 'night'];
     const nextIdx = (modes.indexOf(this.envMode) + 1) % modes.length;
     return this.setEnvironmentMode(modes[nextIdx]);
   }

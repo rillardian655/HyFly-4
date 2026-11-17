@@ -1,146 +1,132 @@
 /**
- * Procedural Texture Generator for HyFly-4
- * Generates high-fidelity materials (hardwood parquet, walnut grain, marble, and fabric)
- * without external network image downloads.
+ * Warm & Natural Procedural Textures for HyFly-4
+ * Natural Scandinavian & Japandi Aesthetic: Light Oak, White Quartz, Bouclé Linen
  */
 import * as THREE from 'three';
 
 export class TextureGenerator {
-  static createParquetFloor() {
+  static createNaturalOakFloor() {
     const canvas = document.createElement('canvas');
     canvas.width = 1024;
     canvas.height = 1024;
     const ctx = canvas.getContext('2d');
 
-    // Base warm dark oak
-    ctx.fillStyle = '#1e1813';
+    // Warm natural scandinavian oak base
+    ctx.fillStyle = '#bfa17c';
     ctx.fillRect(0, 0, 1024, 1024);
 
-    const plankWidth = 128;
-    const plankHeight = 32;
+    const plankW = 128;
+    const plankH = 32;
 
-    for (let y = 0; y < 1024; y += plankHeight) {
-      const offsetX = (Math.floor(y / plankHeight) % 2) * (plankWidth / 2);
-      for (let x = -plankWidth; x < 1024 + plankWidth; x += plankWidth) {
+    for (let y = 0; y < 1024; y += plankH) {
+      const offsetX = (Math.floor(y / plankH) % 2) * (plankW / 2);
+      for (let x = -plankW; x < 1024 + plankW; x += plankW) {
         const px = x + offsetX;
 
-        // Subtle plank tone variation
-        const toneJitter = (Math.sin(px * 13 + y * 7) * 0.5 + 0.5);
-        const r = Math.floor(32 + toneJitter * 14);
-        const g = Math.floor(26 + toneJitter * 11);
-        const b = Math.floor(20 + toneJitter * 9);
+        const jitter = Math.sin(px * 17 + y * 11) * 0.5 + 0.5;
+        const r = Math.floor(190 + jitter * 18);
+        const g = Math.floor(160 + jitter * 15);
+        const b = Math.floor(125 + jitter * 12);
 
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-        ctx.fillRect(px + 1, y + 1, plankWidth - 2, plankHeight - 2);
+        ctx.fillRect(px + 1, y + 1, plankW - 2, plankH - 2);
 
-        // Wood grain streaks
-        ctx.fillStyle = `rgba(0, 0, 0, 0.12)`;
+        // Soft natural wood grain
+        ctx.fillStyle = 'rgba(120, 85, 50, 0.12)';
         for (let i = 0; i < 4; i++) {
-          const streakY = y + 4 + i * 7;
-          ctx.fillRect(px + 2, streakY, plankWidth - 4, 1);
+          ctx.fillRect(px + 2, y + 5 + i * 7, plankW - 4, 1);
         }
 
-        // Grout line
-        ctx.strokeStyle = '#0d0a08';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(px + 0.5, y + 0.5, plankWidth - 1, plankHeight - 1);
+        // Soft seams
+        ctx.strokeStyle = '#9c7d58';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(px + 0.5, y + 0.5, plankW - 1, plankH - 1);
       }
     }
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(4, 4);
-    return texture;
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(4, 4);
+    return tex;
   }
 
-  static createWalnutDesk() {
+  static createNaturalWoodDesk() {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
     const ctx = canvas.getContext('2d');
 
-    // Rich dark walnut gradient
-    const grad = ctx.createLinearGradient(0, 0, 512, 0);
-    grad.addColorStop(0, '#2d1f18');
-    grad.addColorStop(0.3, '#3b2a21');
-    grad.addColorStop(0.7, '#2f2119');
-    grad.addColorStop(1, '#251a14');
-    ctx.fillStyle = grad;
+    // Warm natural oak table surface
+    ctx.fillStyle = '#c8a882';
     ctx.fillRect(0, 0, 512, 512);
 
-    // Fine organic wood grain lines
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 512; i += 3) {
+    ctx.strokeStyle = 'rgba(110, 80, 50, 0.14)';
+    ctx.lineWidth = 1.2;
+    for (let i = 0; i < 512; i += 4) {
       ctx.beginPath();
       ctx.moveTo(i, 0);
-      const wave = Math.sin(i * 0.04) * 8 + Math.cos(i * 0.08) * 4;
-      ctx.bezierCurveTo(i + wave, 170, i - wave, 340, i + wave * 0.5, 512);
+      const curve = Math.sin(i * 0.03) * 6 + Math.cos(i * 0.05) * 3;
+      ctx.bezierCurveTo(i + curve, 170, i - curve, 340, i + curve * 0.5, 512);
       ctx.stroke();
     }
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    return texture;
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    return tex;
   }
 
-  static createMarbleCounter() {
+  static createQuartzCounter() {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
     const ctx = canvas.getContext('2d');
 
-    // Soft white-grey porcelain base
-    ctx.fillStyle = '#f1f5f9';
+    // Warm alabaster / clean warm white quartz
+    ctx.fillStyle = '#f8f6f0';
     ctx.fillRect(0, 0, 512, 512);
 
-    // Natural marble veins
-    ctx.strokeStyle = 'rgba(100, 116, 139, 0.18)';
-    ctx.lineWidth = 3;
-    for (let v = 0; v < 4; v++) {
+    // Very subtle warm beige micro-veins
+    ctx.strokeStyle = 'rgba(180, 165, 145, 0.15)';
+    ctx.lineWidth = 2;
+    for (let v = 0; v < 3; v++) {
       ctx.beginPath();
-      let startX = v * 120 + 40;
-      let startY = 0;
-      ctx.moveTo(startX, startY);
-
-      while (startY < 512) {
-        startX += (Math.random() - 0.45) * 40;
-        startY += 25 + Math.random() * 30;
-        ctx.lineTo(startX, startY);
+      let sx = v * 160 + 50;
+      let sy = 0;
+      ctx.moveTo(sx, sy);
+      while (sy < 512) {
+        sx += (Math.random() - 0.48) * 30;
+        sy += 30 + Math.random() * 25;
+        ctx.lineTo(sx, sy);
       }
       ctx.stroke();
     }
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    return texture;
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    return tex;
   }
 
-  static createFabricSofa() {
+  static createLinenFabric() {
     const canvas = document.createElement('canvas');
     canvas.width = 256;
     canvas.height = 256;
     const ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = '#1e293b';
+    // Cozy oatmeal / warm cream linen
+    ctx.fillStyle = '#e8dfd5';
     ctx.fillRect(0, 0, 256, 256);
 
-    // Cross-weave pattern
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-    for (let x = 0; x < 256; x += 4) {
-      ctx.fillRect(x, 0, 2, 256);
-    }
-    for (let y = 0; y < 256; y += 4) {
-      ctx.fillRect(0, y, 256, 2);
-    }
+    ctx.fillStyle = 'rgba(150, 135, 120, 0.08)';
+    for (let x = 0; x < 256; x += 3) ctx.fillRect(x, 0, 1.5, 256);
+    for (let y = 0; y < 256; y += 3) ctx.fillRect(0, y, 256, 1.5);
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(3, 3);
-    return texture;
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(4, 4);
+    return tex;
   }
 }

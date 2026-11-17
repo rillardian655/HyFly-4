@@ -1,50 +1,52 @@
-# HyFly-4: Interactive 3D Virtual House and Exploration World
+# HyFly-4: Contemporary 3D Home and Architecture Exploration
 
-HyFly-4 is an interactive three-dimensional virtual house and exploration environment rendered in the web browser. Built on Three.js WebGL rendering, Web Audio procedural synthesis, and modern HTML5 platform standards, the project features a controllable 3D humanoid character, a multi-room architectural interior, interactive appliances, and custom 3D typography displaying the creator credit "XIANLY RUNA".
+HyFly-4 is an interactive three-dimensional virtual house and interior exploration application built for the web browser. Developed using Three.js WebGL rendering, Web Audio procedural synthesis, and modern HTML5 platform standards, the project features a controllable third-person casual avatar, a multi-room Scandinavian architectural residence, interactive appliances, and custom 3D brass typography displaying the creator credit "XIANLY RUNA".
 
 ---
 
 ## Creator Information
 
-* **Architect and Lead Developer:** xianly runa
-* **Display Name in Scene:** XIANLY RUNA (Rendered as 3D extruded neon block typography on the central feature wall)
+* **Lead Architect and Designer:** xianly runa
+* **Display Name in Scene:** XIANLY RUNA (Rendered as 3D brushed brass typography with gallery spotlights on the central feature wall)
 * **GitHub Repository:** https://github.com/rillardian655/HyFly-4
 
 ---
 
-## Architectural Layout and Zones
+## Architectural Layout and Interior Design
 
-The virtual world spans a 28m by 28m architectural plan divided into distinct functional zones with physical boundary colliders:
+The residence is designed using a 28m by 28m Scandinavian and Japandi interior aesthetic, emphasizing natural materials, warm lighting, and functional minimalism:
 
-### 1. Central Showcase Wall
-* Features a high-mounted, illuminated 3D neon typography banner reading **"XIANLY RUNA"** constructed from procedural volumetric glyphs with cyan and amber emissive properties and dedicated point-light projectors.
-* Serves as the central corridor connecting all interior zones.
+### 1. Central Feature Wall
+* Features an illuminated 3D brushed champagne brass typography installation reading **"XIANLY RUNA"** mounted on an architectural plaster backplate with warm gallery downlighting.
+* Serves as the central corridor connecting the studio, living room, and kitchen.
 
-### 2. Workstation and Cyber Studio (North-West Zone)
-* **Ultrawide Computer Setup:** High-resolution monitor displaying animated system telemetry canvas; interacting opens the full-screen terminal modal.
-* **Articulated Desk Lamp:** Interactive desk light featuring real-time point lighting and dynamic shade glow.
-* **Lo-Fi Audio Boombox:** Synthesizer station with animated speaker cones reacting to music synthesis.
-* **Desk Accessories:** Mechanical keyboard, precision mouse, coffee mug with active steam particle physics, and floating wall bookshelves.
+### 2. Creative Studio and Workstation (North-West Zone)
+* **Solid Oak Desk:** Natural oak desk with matte black architectural legs.
+* **Minimalist Monitor:** Clean aluminum-frame desktop display featuring live canvas telemetry; interacting launches the workstation terminal modal.
+* **Pleated Fabric Desk Lamp:** Warm incandescent lighting fixture with paper lampshade.
+* **Acoustic Tabletop Radio:** Natural walnut audio player generating procedural lo-fi chords.
+* **Botanical Decor:** Potted Monstera houseplant in a terracotta planter and steaming ceramic espresso mug.
+* **Floating Bookshelves:** Oak wall shelving holding books and decor.
 
-### 3. Living Room (North-East Zone)
-* **Sectional L-Shaped Sofa:** Plush lounge furniture with resting interaction.
-* **Wall-Mounted Smart TV:** Generates real-time procedural video channels (Channel 01: Synthwave Horizon flight stream, Channel 02: UAV telemetry and radar tracking).
-* **Standing Floor Lamp:** Floor lighting fixture with room-filling illumination.
-* **Modern Fireplace:** Stone hearth with ember glow and warm ambient light.
-* **Lounge Table and Floor Rug:** Low-profile center table and textured textile rug.
+### 3. Scandinavian Living Room (North-East Zone)
+* **Oatmeal Boucle Sectional Sofa:** Generous lounge couch with linen accent cushions and mid-century oak legs.
+* **Solid Oak Round Coffee Table:** Low-profile natural wood table on a textured wool rug.
+* **OLED Smart TV on Oak Media Credenza:** Generates procedural video feeds (Channel 01: Golden hour nature lounge stream, Channel 02: Architecture and design showcase).
+* **Japanese Akari Paper Floor Lamp:** Tripod wireframe floor lamp emitting soft diffused warmth.
+* **Limestone Fireplace:** Natural stone hearth with warm firelight.
 
 ### 4. Kitchen and Dining (South-West Zone)
-* **Island Kitchen Counter:** White marble countertop with under-cabinet storage.
-* **Double-Door Refrigerator:** Hinged door mechanism that swings open on interaction.
-* **Induction and Gas Stove:** Functional range with toggleable blue flame ignition and localized point light.
-* **Bar Stools and Sink:** Stainless steel sink, faucet, and high bar seating.
+* **Island Counter:** White quartz countertop with natural oak cabinetry and undermount black steel sink.
+* **Matte White Refrigerator:** Clean contemporary refrigerator with swinging door and interior illumination.
+* **Gas Stove Range:** Minimalist cooktop with toggleable blue flame and lighting.
+* **Oak Counter Stools:** Saddle-seat wooden stools with matte black steel footrest rings.
 
 ---
 
 ## Character Kinematics and Camera System
 
-### 1. Humanoid Player Avatar
-* Stylized 3D character equipped with a jacket, backpack, headgear, visor, and dual-tone limbs.
+### 1. Casual Player Avatar
+* Realistic, grounded character styling free of sci-fi or robotic elements: Cozy cream knit wool crewneck sweater, dark slate chino trousers, and clean white leather sneakers.
 * Procedural skeletal walk cycle: Dynamic arm and leg swinging synchronized to linear velocity and sprint multipliers.
 * Physics kinematics: Jump impulse calculation, gravitational acceleration, and ground contact detection.
 
@@ -54,14 +56,14 @@ The virtual world spans a 28m by 28m architectural plan divided into distinct fu
 
 ### 3. Third-Person Camera Rig
 * Spherical coordinate camera following the player avatar with smooth damping.
-* Unconstrained horizontal mouse orbiting and vertical pitch clamping to eliminate disorientation.
+* Unconstrained horizontal mouse orbiting and vertical pitch clamping.
 * Mouse wheel distance zoom with near and far clipping bounds.
 
 ---
 
 ## Procedural Lo-Fi Audio Synthesis Engine
 
-* **Real-Time Chord Synthesizer:** Built completely on the native Web Audio API without pre-recorded MP3 or WAV dependencies.
+* **Real-Time Chord Synthesizer:** Built completely on the native Web Audio API without pre-recorded audio files.
 * **Subtractive Lowpass Filtering:** Dynamic filter envelope shaping lo-fi jazz chord progressions.
 * **Vinyl Noise Generator:** Procedural crackle and surface hiss synthesized via custom audio buffer noise.
 * **Tactile Sound Effects:** Synthesized audio cues for mechanical switches, keyboard strokes, window transitions, and appliance interactions.
@@ -87,38 +89,20 @@ The virtual world spans a 28m by 28m architectural plan divided into distinct fu
 
 ---
 
-## Terminal Command Reference
-
-Accessible via the Workstation PC monitor:
-
-| Command | Arguments | Description |
-|---|---|---|
-| `help` | None | Displays the reference table of supported terminal commands. |
-| `about` | None | Outputs project architecture and author information. |
-| `neofetch` / `specs` | None | Prints hardware configuration, OS specs, and ASCII banner. |
-| `projects` | None | Lists connected robotics, simulation, and software repositories. |
-| `skills` | None | Summarizes primary technical domains and toolchains. |
-| `matrix` | None | Launches an animated green digital rain terminal stream. |
-| `date` / `time` | None | Outputs current system date and UTC time. |
-| `echo` | `<text>` | Echoes input string back to terminal buffer. |
-| `clear` | None | Clears terminal screen history. |
-| `exit` | None | Dismisses workstation terminal modal dialog. |
-
----
-
 ## Project Structure
 
 ```
 HyFly-4/
 ├── index.html          # HTML5 entry document, UI overlay, and modal templates
 ├── css/
-│   └── style.css       # Core styling, glassmorphism, HUD, and modal containment
+│   └── style.css       # Warm contemporary styling, HUD, and modal containment
 ├── js/
 │   ├── main.js         # Game loop, proximity detection, and input coordinator
-│   ├── player.js       # Player character avatar, walk kinematics, and camera rig
+│   ├── player.js       # Casual character avatar, walk kinematics, and camera rig
 │   ├── house.js        # Multi-room architecture, furniture, and appliances
-│   ├── text3d.js       # Procedural 3D block typography for "XIANLY RUNA"
-│   ├── scene.js        # Three.js WebGL scene, lighting, and day-night presets
+│   ├── text3d.js       # Vector-extruded 3D brass typography for "XIANLY RUNA"
+│   ├── textures.js     # Procedural oak, quartz, marble, and linen canvas textures
+│   ├── scene.js        # Three.js WebGL scene, warm lighting, and sky presets
 │   ├── audio.js        # Web Audio API lo-fi synthesizer and sound effects
 │   ├── ui.js           # HUD status bars, tabs, visualizer, and notifications
 │   └── terminal.js     # Virtual terminal commands, specs, and local notes
@@ -148,14 +132,6 @@ Open your browser and navigate to:
 ```
 http://localhost:8000
 ```
-
----
-
-## Accessibility and Platform Standards
-
-* **Native Dialog Layer:** Workstation window is implemented using the standard `<dialog>` element via `showModal()`.
-* **Scroll Containment:** Styled with `overscroll-behavior: contain` on both `dialog:modal` and `dialog::backdrop` selectors.
-* **Light-Dismiss Fallback:** Robust pointer position boundary checking ensuring graceful dismissal on external click across all browsers.
 
 ---
 

@@ -61,7 +61,7 @@ export class PlayerController {
     this.wandMesh = null;
     this.broomMesh = null;
     this.baseModelY = 0;
-    this.boneGroups = {};
+    this.rootBones = {};
     this.initBoneRotations = {};
     this.isLoaded = false;
 
@@ -244,19 +244,28 @@ export class PlayerController {
             }
           }
 
-          // Group all bone instances across all skeletons (Head, Hair, Body, Coat, Dress)
-          if (child.isBone) {
-            if (!this.boneGroups[child.name]) {
-              this.boneGroups[child.name] = [];
+          // Capture ONLY the single root bone for each joint (prevents nested duplicate 5x multiplier)
+          if (child.isBone && (!child.parent || child.parent.name !== child.name)) {
+            if (!this.rootBones[child.name]) {
+              this.rootBones[child.name] = child;
               this.initBoneRotations[child.name] = {
                 x: child.rotation.x,
                 y: child.rotation.y,
                 z: child.rotation.z
               };
             }
-            this.boneGroups[child.name].push(child);
           }
         });
+
+        // Initialize relaxed arms hanging naturally at her sides upon spawn (no T-pose)
+        const spawnArmRestX = 0.95;
+        if (this.rootBones['Upper_Arm_L'] && this.initBoneRotations['Upper_Arm_L']) {
+          this.rootBones['Upper_Arm_L'].rotation.x = this.initBoneRotations['Upper_Arm_L'].x + spawnArmRestX;
+        }
+        if (this.rootBones['Upper_Arm_R'] && this.initBoneRotations['Upper_Arm_R']) {
+          this.rootBones['Upper_Arm_R'].rotation.x = this.initBoneRotations['Upper_Arm_R'].x + spawnArmRestX;
+        }
+        fbx.updateMatrixWorld(true);
 
         // 2. Load the official Wand.fbx from author's zip
         loader.load(
@@ -628,12 +637,9 @@ export class PlayerController {
   }
 
   setBoneRotation(name, axis, targetVal, lerpFactor = 0.25) {
-    const list = this.boneGroups[name];
-    if (!list) return;
-    for (let i = 0; i < list.length; i++) {
-      const b = list[i];
-      b.rotation[axis] = THREE.MathUtils.lerp(b.rotation[axis], targetVal, lerpFactor);
-    }
+    const b = this.rootBones[name];
+    if (!b) return;
+    b.rotation[axis] = THREE.MathUtils.lerp(b.rotation[axis], targetVal, lerpFactor);
   }
 
   updateLocomotion(isMoving, speed, dt, turnDiff) {

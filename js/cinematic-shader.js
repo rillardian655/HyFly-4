@@ -42,7 +42,7 @@ export const CinematicShader = {
 
     void main() {
       // Subtle optical dispersion (chromatic aberration) at edges
-      vec2 center = vec2(0.5);
+      vec2 center = vec2(0.5, 0.5);
       vec2 dir = vUv - center;
       float distSq = dot(dir, dir);
       float caOffset = distSq * 0.0032;
@@ -77,3 +77,4 @@ export const CinematicShader = {
     }
   `
 };
+

@@ -13,7 +13,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-import { CinematicShader } from './cinematic-shader.js?v=19.0';
+import { CinematicShader } from './cinematic-shader.js?v=20.0';
 
 export class SceneManager {
   constructor(canvas) {

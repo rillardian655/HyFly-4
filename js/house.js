@@ -10,8 +10,8 @@
  * 7. Central Feature Slatted Wall with 3D Brass Typography "XIANLY RUNA"
  */
 import * as THREE from 'three';
-import { create3DNameBanner } from './text3d.js?v=21.0';
-import { TextureGenerator } from './textures.js?v=21.0';
+import { create3DNameBanner } from './text3d.js?v=23.0';
+import { TextureGenerator } from './textures.js?v=23.0';
 
 export class HouseBuilder {
   constructor(scene) {
@@ -118,9 +118,9 @@ export class HouseBuilder {
     const floorMat = new THREE.MeshStandardMaterial({
       map: this.oakFloorTex,
       bumpMap: this.oakFloorBumpTex,
-      bumpScale: 0.045,
-      roughness: 0.32,
-      metalness: 0.02
+      bumpScale: 0.024,
+      roughness: 0.22,
+      metalness: 0.05
     });
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.rotation.x = -Math.PI / 2;
@@ -131,8 +131,8 @@ export class HouseBuilder {
     const wallMat = new THREE.MeshStandardMaterial({
       map: this.plasterTex,
       bumpMap: this.plasterBumpTex,
-      bumpScale: 0.025,
-      roughness: 0.82
+      bumpScale: 0.015,
+      roughness: 0.76
     });
     const oakTrimMat = new THREE.MeshStandardMaterial({
       map: this.oakWoodTex,
@@ -890,8 +890,8 @@ export class HouseBuilder {
     const oakBaseMat = new THREE.MeshStandardMaterial({ map: this.oakWoodTex, roughness: 0.5 });
     const quartzMat = new THREE.MeshStandardMaterial({
       map: this.quartzTex,
-      roughness: 0.25,
-      metalness: 0.05
+      roughness: 0.12,
+      metalness: 0.06
     });
 
     // Base cabinet: 2.3m x 0.85m x 0.86m
@@ -908,7 +908,7 @@ export class HouseBuilder {
     top.receiveShadow = true;
     island.add(top);
 
-    const blackSteel = new THREE.MeshStandardMaterial({ color: 0x1a1d24, roughness: 0.3 });
+    const blackSteel = new THREE.MeshStandardMaterial({ color: 0x1a1d24, roughness: 0.25, metalness: 0.85 });
 
     // Undermount Sink
     const sink = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.01, 0.42), blackSteel);

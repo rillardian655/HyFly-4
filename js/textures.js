@@ -8,37 +8,78 @@ import * as THREE from 'three';
 export class TextureGenerator {
   static createNaturalOakFloor() {
     const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 1024;
+    canvas.width = 2048;
+    canvas.height = 2048;
     const ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = '#c7ab88';
-    ctx.fillRect(0, 0, 1024, 1024);
+    // Rich Honey Golden European Oak base
+    ctx.fillStyle = '#9b7145';
+    ctx.fillRect(0, 0, 2048, 2048);
 
-    const plankW = 128;
-    const plankH = 32;
+    const plankW = 256;
+    const plankH = 64;
 
-    for (let y = 0; y < 1024; y += plankH) {
-      const offsetX = (Math.floor(y / plankH) % 2) * (plankW / 2);
-      for (let x = -plankW; x < 1024 + plankW; x += plankW) {
+    for (let y = 0; y < 2048; y += plankH) {
+      const offsetX = (Math.floor(y / plankH) % 3) * (plankW / 3);
+      for (let x = -plankW; x < 2048 + plankW; x += plankW) {
         const px = x + offsetX;
-        const jitter = Math.sin(px * 17 + y * 11) * 0.5 + 0.5;
-        const r = Math.floor(198 + jitter * 16);
-        const g = Math.floor(168 + jitter * 14);
-        const b = Math.floor(134 + jitter * 12);
+        const jitter = Math.sin(px * 0.05 + y * 0.08) * 0.5 + 0.5;
+        // Rich warm honey oak variations
+        const r = Math.floor(172 + jitter * 22);
+        const g = Math.floor(130 + jitter * 18);
+        const b = Math.floor(88 + jitter * 14);
 
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-        ctx.fillRect(px + 1, y + 1, plankW - 2, plankH - 2);
+        ctx.fillRect(px + 1.5, y + 1.5, plankW - 3, plankH - 3);
 
-        // Wood grain
-        ctx.fillStyle = 'rgba(125, 90, 55, 0.1)';
-        for (let i = 0; i < 4; i++) {
-          ctx.fillRect(px + 2, y + 5 + i * 7, plankW - 4, 1);
+        // Organic prominent wood grain
+        ctx.fillStyle = 'rgba(75, 48, 22, 0.16)';
+        for (let i = 0; i < 7; i++) {
+          const gy = y + 6 + i * 8 + Math.sin(px * 0.02 + i) * 2;
+          ctx.fillRect(px + 3, gy, plankW - 6, 1.4);
         }
 
-        ctx.strokeStyle = '#a68761';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(px + 0.5, y + 0.5, plankW - 1, plankH - 1);
+        // Crisp dark beveled edge joint
+        ctx.strokeStyle = '#5a3d20';
+        ctx.lineWidth = 2.0;
+        ctx.strokeRect(px + 1.0, y + 1.0, plankW - 2.0, plankH - 2.0);
+      }
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(4, 4);
+    return tex;
+  }
+
+  static createNaturalOakFloorBump() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 2048;
+    canvas.height = 2048;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#808080';
+    ctx.fillRect(0, 0, 2048, 2048);
+
+    const plankW = 256;
+    const plankH = 64;
+
+    for (let y = 0; y < 2048; y += plankH) {
+      const offsetX = (Math.floor(y / plankH) % 3) * (plankW / 3);
+      for (let x = -plankW; x < 2048 + plankW; x += plankW) {
+        const px = x + offsetX;
+
+        // Bevel edge groove in bump map
+        ctx.strokeStyle = '#282828';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(px + 1, y + 1, plankW - 2, plankH - 2);
+
+        // Raised grain
+        ctx.fillStyle = 'rgba(215, 215, 215, 0.09)';
+        for (let i = 0; i < 6; i++) {
+          ctx.fillRect(px + 4, y + 8 + i * 9, plankW - 8, 1.5);
+        }
       }
     }
 
@@ -199,44 +240,6 @@ export class TextureGenerator {
     ctx.fillRect(0, 0, 256, 256);
 
     const tex = new THREE.CanvasTexture(canvas);
-    return tex;
-  }
-
-  static createNaturalOakFloorBump() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 1024;
-    const ctx = canvas.getContext('2d');
-
-    // Neutral gray mid-height
-    ctx.fillStyle = '#808080';
-    ctx.fillRect(0, 0, 1024, 1024);
-
-    const plankW = 128;
-    const plankH = 32;
-
-    for (let y = 0; y < 1024; y += plankH) {
-      const offsetX = (Math.floor(y / plankH) % 2) * (plankW / 2);
-      for (let x = -plankW; x < 1024 + plankW; x += plankW) {
-        const px = x + offsetX;
-        
-        // Deep groove between planks
-        ctx.strokeStyle = '#202020';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(px + 0.5, y + 0.5, plankW - 1, plankH - 1);
-
-        // Plank surface grain elevation
-        ctx.fillStyle = 'rgba(210, 210, 210, 0.12)';
-        for (let i = 0; i < 4; i++) {
-          ctx.fillRect(px + 2, y + 4 + i * 7, plankW - 4, 1.5);
-        }
-      }
-    }
-
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(4, 4);
     return tex;
   }
 

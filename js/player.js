@@ -229,10 +229,25 @@ export class PlayerController {
               else if (name.includes('brooch')) { map = textures.Brooch; isAlpha = true; }
               else { map = textures.Coat; }
 
+              let roughness = 0.6;
+              let metalness = 0.04;
+              if (name.includes('face') || name.includes('skin') || name.includes('body')) {
+                roughness = 0.82;
+                metalness = 0.0;
+              } else if (name.includes('hair')) {
+                roughness = 0.42;
+                metalness = 0.08;
+              } else if (name.includes('brooch') || name.includes('metal') || name.includes('gold')) {
+                roughness = 0.22;
+                metalness = 0.92;
+              } else if (name.includes('dress')) {
+                roughness = 0.72;
+              }
+
               return new THREE.MeshStandardMaterial({
                 map: map,
-                roughness: 0.6,
-                metalness: 0.05,
+                roughness: roughness,
+                metalness: metalness,
                 alphaTest: isAlpha ? 0.45 : 0.0,
                 transparent: isAlpha,
                 depthWrite: true

@@ -87,11 +87,11 @@ export function create3DNameBanner(text = "XIANLY RUNA", position = new THREE.Ve
     bevelSegments: 4
   };
 
-  // Luxurious Warm Brushed Brass / Champagne Gold
+  // Luxurious Warm Brushed Brass / Champagne Gold with high specular reflection
   const brassMat = new THREE.MeshStandardMaterial({
-    color: 0xd4af37,
-    roughness: 0.32,
-    metalness: 0.85
+    color: 0xdfb743,
+    roughness: 0.16,
+    metalness: 0.95
   });
 
   const letterSpacing = 0.82;

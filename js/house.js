@@ -10,8 +10,8 @@
  * 7. Central Feature Slatted Wall with 3D Brass Typography "XIANLY RUNA"
  */
 import * as THREE from 'three';
-import { create3DNameBanner } from './text3d.js';
-import { TextureGenerator } from './textures.js';
+import { create3DNameBanner } from './text3d.js?v=21.0';
+import { TextureGenerator } from './textures.js?v=21.0';
 
 export class HouseBuilder {
   constructor(scene) {

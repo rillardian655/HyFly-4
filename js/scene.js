@@ -1,19 +1,14 @@
 /**
- * High-End Atmospheric Scene Manager & Post-Processing Lighting for HyFly-4
+ * High-End Atmospheric Scene Manager & Lighting for HyFly-4
  * Features:
- * - EffectComposer with UnrealBloomPass (radiant glow on lights, windows, screens, spells)
- * - Custom Cinematic Post-Processing Shader (vignette, film warmth, chromatic aberration, grain)
+ * - Natural Scandinavian & Japandi contemporary lighting scheme
+ * - ACESFilmic Tone Mapping with balanced warm exposure
  * - Volumetric Sunlight Shafts (God Rays from skylights & panoramic windows)
  * - Atmospheric Floating Dust Motes (Golden sunlit specks drifting in 3D air)
  * - Day / Golden Hour Sunset / Cozy Night Environment Cycles
+ * - 100% Native, reliable WebGL rendering without post-processing failure modes
  */
 import * as THREE from 'three';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-import { CinematicShader } from './cinematic-shader.js?v=20.0';
 
 export class SceneManager {
   constructor(canvas) {
@@ -21,11 +16,6 @@ export class SceneManager {
     this.scene = null;
     this.camera = null;
     this.renderer = null;
-
-    // Post-Processing Pipeline
-    this.composer = null;
-    this.bloomPass = null;
-    this.cinematicPass = null;
 
     // Lighting & Atmosphere
     this.ambientLight = null;
@@ -70,7 +60,6 @@ export class SceneManager {
     this.setupStars();
     this.setupAtmosphericDust();
     this.setupSunlightShafts();
-    this.setupPostProcessing();
     this.setEnvironmentMode('day');
 
     window.addEventListener('resize', () => this.onResize());
@@ -78,11 +67,11 @@ export class SceneManager {
 
   setupLighting() {
     // Warm natural ambient bounce
-    this.ambientLight = new THREE.AmbientLight(0xfff6ec, 0.82);
+    this.ambientLight = new THREE.AmbientLight(0xfff6ec, 0.85);
     this.scene.add(this.ambientLight);
 
     // Hemisphere light: soft warm sky and natural timber floor reflection (keeps character luminous)
-    this.hemiLight = new THREE.HemisphereLight(0xfff5ea, 0x8a7b6a, 0.70);
+    this.hemiLight = new THREE.HemisphereLight(0xfff5ea, 0x8a7b6a, 0.72);
     this.scene.add(this.hemiLight);
 
     // Directional Sunlight pouring through skylights and panoramic south/east windows
@@ -121,27 +110,6 @@ export class SceneManager {
     const corridorLight = new THREE.PointLight(0xfff0dd, 0.9, 10);
     corridorLight.position.set(0, 3.2, 0);
     this.scene.add(corridorLight);
-  }
-
-  setupPostProcessing() {
-    this.composer = new EffectComposer(this.renderer);
-
-    // 1. Regular Scene Pass
-    const renderPass = new RenderPass(this.scene, this.camera);
-    this.composer.addPass(renderPass);
-
-    // 2. Radiant UnrealBloomPass (Soft luminous glow on sunbeams, lamps, screens, and magic)
-    const res = new THREE.Vector2(window.innerWidth, window.innerHeight);
-    this.bloomPass = new UnrealBloomPass(res, 0.44, 0.46, 0.82);
-    this.composer.addPass(this.bloomPass);
-
-    // 3. OutputPass (sRGB color conversion & tone mapping)
-    const outputPass = new OutputPass();
-    this.composer.addPass(outputPass);
-
-    // 4. Custom Cinematic Color, Vignette & Film Grain Shader
-    this.cinematicPass = new ShaderPass(CinematicShader);
-    this.composer.addPass(this.cinematicPass);
   }
 
   setupAtmosphericDust() {
@@ -274,13 +242,12 @@ export class SceneManager {
         this.scene.background.setHex(0x93c5fd); // Soft natural sky blue
         this.ambientLight.color.setHex(0xfff8ee);
         this.ambientLight.intensity = 0.85;
-        if (this.hemiLight) this.hemiLight.intensity = 0.70;
+        if (this.hemiLight) this.hemiLight.intensity = 0.72;
         this.sunLight.color.setHex(0xfffaed);
         this.sunLight.intensity = 2.2;
         if (this.stars) this.stars.visible = false;
         if (this.beamMat) this.beamMat.color.setHex(0xfff5dd);
         if (this.dustParticles) this.dustParticles.material.color.setHex(0xfff0db);
-        if (this.bloomPass) this.bloomPass.strength = 0.44;
         break;
 
       case 'sunset':
@@ -293,7 +260,6 @@ export class SceneManager {
         if (this.stars) this.stars.visible = false;
         if (this.beamMat) this.beamMat.color.setHex(0xfb923c);
         if (this.dustParticles) this.dustParticles.material.color.setHex(0xfed7aa);
-        if (this.bloomPass) this.bloomPass.strength = 0.55;
         break;
 
       case 'night':
@@ -307,7 +273,6 @@ export class SceneManager {
         if (this.stars) this.stars.visible = true;
         if (this.beamMat) this.beamMat.color.setHex(0x60a5fa);
         if (this.dustParticles) this.dustParticles.material.color.setHex(0x93c5fd);
-        if (this.bloomPass) this.bloomPass.strength = 0.62; // Night lamps bloom prominently
         break;
     }
     return this.envMode;
@@ -325,12 +290,6 @@ export class SceneManager {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
-    if (this.composer) {
-      this.composer.setSize(width, height);
-    }
-    if (this.bloomPass) {
-      this.bloomPass.setSize(width, height);
-    }
   }
 
   checkIntersection(event) {
@@ -370,19 +329,10 @@ export class SceneManager {
       const baseOpacity = (this.envMode === 'day') ? 0.20 : (this.envMode === 'sunset' ? 0.26 : 0.06);
       this.beamMat.opacity = baseOpacity + Math.sin(clock * 1.6) * 0.025;
     }
-
-    // 3. Update cinematic shader time uniform
-    if (this.cinematicPass && this.cinematicPass.uniforms.uTime) {
-      this.cinematicPass.uniforms.uTime.value = clock;
-    }
   }
 
   render(clock = 0) {
     this.updateAtmosphere(clock);
-    if (this.composer) {
-      this.composer.render();
-    } else {
-      this.renderer.render(this.scene, this.camera);
-    }
+    this.renderer.render(this.scene, this.camera);
   }
 }

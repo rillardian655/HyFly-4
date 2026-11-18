@@ -799,20 +799,31 @@ export class PlayerController {
       this.setBoneRotation('Lower_Leg_R', 'x', baseKneeRX + kneeR * 0.36, 0.3);
       this.setBoneRotation('Lower_Leg_R', 'z', baseKneeRZ - kneeR, 0.3);
 
-      // 4. Arm swing in anti-phase with legs (Left arm opposes Left thigh)
-      const armSwingAmp = 0.30 * strideSpeed;
-      const armSwing = Math.cos(tL) * armSwingAmp;
+      // 4. Natural arm pendulum swing — CORRECT anti-phase:
+      //    Left leg forward → Right arm forward (opposite side)
+      //    tL = left leg phase, tR = right leg phase (tL + PI)
+      //    Left arm uses RIGHT leg phase → anti-phase with left leg
+      //    Right arm uses LEFT leg phase → anti-phase with right leg
+      const armSwingAmp = this.keys.sprint ? 0.17 : 0.13; // subtle, human-scale swing
+
+      // sin() gives smoother start/end compared to cos()
+      const armSwingL = Math.sin(tR) * armSwingAmp; // left arm = right leg phase
+      const armSwingR = Math.sin(tL) * armSwingAmp; // right arm = left leg phase
+
+      // Slight elbow flex when arm swings forward (looks natural)
+      const elbowFlexL = Math.max(0, armSwingL) * 0.25;
+      const elbowFlexR = Math.max(0, armSwingR) * 0.25;
 
       if (!this.currentEmote) {
-        // When Left thigh is forward (+thighL), Left arm swings backward (+armSwing)
-        this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + armRestX, 0.3);
-        this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ + armSwing, 0.3);
-        this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ, 0.3);
+        // Left arm — hangs at armRestX offset, swings forward/back via Z
+        this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + armRestX, 0.22);
+        this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ + armSwingL, 0.22);
+        this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ + elbowFlexL, 0.22);
 
-        // Right arm swings forward (-armSwing)
-        this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + armRestX, 0.3);
-        this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ - armSwing, 0.3);
-        this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ, 0.3);
+        // Right arm — mirrors left, swings in opposite direction
+        this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX + armRestX, 0.22);
+        this.setBoneRotation('Upper_Arm_R', 'z', baseArmRZ - armSwingR, 0.22);
+        this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ - elbowFlexR, 0.22);
       }
 
       // 5. Subtle hair flutter
@@ -827,8 +838,9 @@ export class PlayerController {
         this.broomMesh.rotation.z = 0.82 + Math.sin(this.walkCycle) * 0.04;
       }
       if (this.wandMesh && !this.currentEmote) {
-        this.wandMesh.position.set(-0.16, 0.74 + strideBob * 0.5, 0.08 - armSwing * 0.2);
-        this.wandMesh.rotation.set(-0.25 - armSwing * 0.2, 0.15, -0.12);
+        // Wand follows right arm swing (armSwingR)
+        this.wandMesh.position.set(-0.16, 0.74 + strideBob * 0.5, 0.08 - armSwingR * 0.15);
+        this.wandMesh.rotation.set(-0.25 - armSwingR * 0.15, 0.15, -0.12);
       }
 
       // Footstep audio on downbeat (heel strike when foot touches ground)

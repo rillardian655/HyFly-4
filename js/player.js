@@ -35,8 +35,8 @@ export class PlayerController {
     this.wasGrounded = true;
     this.walkCycle = 0;
     this.lastFootstepStep = 0;
-    this.walkSpeed = 3.2;
-    this.sprintSpeed = 5.8;
+    this.walkSpeed = 1.8;
+    this.sprintSpeed = 3.6;
     this.gravity = 22.0;
     this.jumpForce = 7.6;
 
@@ -747,9 +747,12 @@ export class PlayerController {
         this.setBoneRotation(bName, 'x', baseX - 0.2 + windFlutter, 0.2);
       });
     } else if (isMoving && this.isGrounded) {
-      // Natural human walking cadence: ~1.8 steps per second (108 steps/min)
-      const cycleFrequency = this.keys.sprint ? 1.55 : 1.70;
-      this.walkCycle += dt * speed * cycleFrequency;
+      // Fixed cadence gait: DECOUPLED from speed so foot cycle stays visually natural
+      // Target: ~0.85 full strides/second walking (~1.7 rad/s), ~1.3 strides/sec sprinting
+      const WALK_HZ = 0.85;   // strides per second (slow, human indoor walking)
+      const SPRINT_HZ = 1.30; // strides per second when sprinting
+      const strideHz = this.keys.sprint ? SPRINT_HZ : WALK_HZ;
+      this.walkCycle += dt * strideHz * Math.PI * 2; // constant regardless of speed value
 
       // Two-phase gait calculation (0 to 2*PI per full stride)
       const TWO_PI = Math.PI * 2;
@@ -757,9 +760,9 @@ export class PlayerController {
       if (tL < 0) tL += TWO_PI;
       const tR = (tL + Math.PI) % TWO_PI;
 
-      const strideSpeed = this.keys.sprint ? 1.25 : 1.0;
-      const strideAmp = 0.26 * strideSpeed;
-      const kneeBendAmp = 0.38 * strideSpeed;
+      const strideSpeed = this.keys.sprint ? 1.20 : 1.0;
+      const strideAmp = 0.22 * strideSpeed;
+      const kneeBendAmp = 0.32 * strideSpeed;
 
       // 1. Pelvis vertical bobbing & lateral weight transfer
       // Bobbing is dual-frequency (highest at mid-stance, lowest at touchdown)
@@ -836,8 +839,8 @@ export class PlayerController {
       }
     } else {
       // Natural Idle Breathing & Gentle Weight Shift (Completely relaxed arms at sides)
-      const breath = Math.sin(now * 2.2) * 0.012;
-      const idleSway = Math.sin(now * 1.2) * 0.008;
+      const breath = Math.sin(now * 1.6) * 0.009;  // slower, calmer breathing
+      const idleSway = Math.sin(now * 0.9) * 0.006;
 
       this.modelContainer.position.y = THREE.MathUtils.lerp(this.modelContainer.position.y, this.baseModelY + breath, 0.1);
       this.modelContainer.position.x = THREE.MathUtils.lerp(this.modelContainer.position.x, 0, 0.1);

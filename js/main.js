@@ -3,12 +3,12 @@
  * Multi-Room House Exploration Game & 3D Interactive Hub
  */
 import * as THREE from 'three';
-import { SceneManager } from './scene.js?v=18.0';
-import { HouseBuilder } from './house.js?v=18.0';
-import { PlayerController } from './player.js?v=18.0';
-import { VirtualTerminal } from './terminal.js?v=18.0';
-import { UIManager } from './ui.js?v=18.0';
-import { soundEngine } from './audio.js?v=18.0';
+import { SceneManager } from './scene.js?v=19.0';
+import { HouseBuilder } from './house.js?v=19.0';
+import { PlayerController } from './player.js?v=19.0';
+import { VirtualTerminal } from './terminal.js?v=19.0';
+import { UIManager } from './ui.js?v=19.0';
+import { soundEngine } from './audio.js?v=19.0';
 
 function initApp() {
   const canvas = document.getElementById('webgl-canvas');
@@ -262,7 +262,7 @@ function initApp() {
     checkProximity();
     houseBuilder.update(clock, soundEngine.isPlayingMusic);
     ui.updateVisualizer();
-    sceneMgr.render();
+    sceneMgr.render(clock);
   }
 
   requestAnimationFrame(animate);

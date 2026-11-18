@@ -21,6 +21,10 @@ export class HouseBuilder {
 
     // Natural PBR textures
     this.oakFloorTex = TextureGenerator.createNaturalOakFloor();
+    this.oakFloorBumpTex = TextureGenerator.createNaturalOakFloorBump();
+    this.plasterTex = TextureGenerator.createPlasterWallTexture();
+    this.plasterBumpTex = TextureGenerator.createPlasterWallBump();
+    this.boucleBumpTex = TextureGenerator.createBoucleFabricBump();
     this.oakWoodTex = TextureGenerator.createNaturalWoodDesk();
     this.quartzTex = TextureGenerator.createQuartzCounter();
     this.linenTex = TextureGenerator.createLinenFabric();
@@ -109,11 +113,13 @@ export class HouseBuilder {
      Room dimensions: 18m x 18m footprint, 3.4m ceiling height
      ========================================================================= */
   buildHouseArchitecture() {
-    // 1. Natural Light Oak Plank Flooring
+    // 1. Natural Light Oak Plank Flooring with tactile bevel bump
     const floorGeo = new THREE.PlaneGeometry(20, 20);
     const floorMat = new THREE.MeshStandardMaterial({
       map: this.oakFloorTex,
-      roughness: 0.38,
+      bumpMap: this.oakFloorBumpTex,
+      bumpScale: 0.045,
+      roughness: 0.32,
       metalness: 0.02
     });
     const floor = new THREE.Mesh(floorGeo, floorMat);
@@ -121,12 +127,15 @@ export class HouseBuilder {
     floor.receiveShadow = true;
     this.scene.add(floor);
 
-    // Warm Off-White / Greige Plaster Material
+    // Warm Off-White / Greige Plaster Material with subtle trowel bump
     const wallMat = new THREE.MeshStandardMaterial({
-      color: 0xf4efe6,
-      roughness: 0.88
+      map: this.plasterTex,
+      bumpMap: this.plasterBumpTex,
+      bumpScale: 0.025,
+      roughness: 0.82
     });
     const oakTrimMat = new THREE.MeshStandardMaterial({
+      map: this.oakWoodTex,
       color: 0x8a6a48,
       roughness: 0.55
     });
@@ -200,8 +209,8 @@ export class HouseBuilder {
   buildRoofAndCeiling() {
     const ceilingY = 3.4;
     const ceilingMat = new THREE.MeshStandardMaterial({
-      color: 0xfbf8f3,
-      roughness: 0.9,
+      map: this.plasterTex,
+      roughness: 0.88,
       side: THREE.DoubleSide
     });
     const beamMat = new THREE.MeshStandardMaterial({
@@ -527,7 +536,12 @@ export class HouseBuilder {
 
     this.lampBulb = new THREE.Mesh(
       new THREE.SphereGeometry(0.028, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0xffedd5 })
+      new THREE.MeshStandardMaterial({
+        color: 0xffedd5,
+        emissive: 0xffedd5,
+        emissiveIntensity: 2.2,
+        roughness: 0.2
+      })
     );
     this.lampBulb.position.set(0, 0.39, 0.11);
     lamp.add(this.lampBulb);
@@ -674,6 +688,8 @@ export class HouseBuilder {
 
     const boucléMat = new THREE.MeshStandardMaterial({
       map: this.linenTex,
+      bumpMap: this.boucleBumpTex,
+      bumpScale: 0.032,
       roughness: 0.85
     });
     const woodLegMat = new THREE.MeshStandardMaterial({ color: 0x785a3c, roughness: 0.5 });
@@ -766,7 +782,13 @@ export class HouseBuilder {
 
     const tvScreen = new THREE.Mesh(
       new THREE.PlaneGeometry(1.42, 0.81),
-      new THREE.MeshBasicMaterial({ map: this.tvTexture, toneMapped: false })
+      new THREE.MeshStandardMaterial({
+        map: this.tvTexture,
+        emissive: 0xffffff,
+        emissiveMap: this.tvTexture,
+        emissiveIntensity: 0.65,
+        roughness: 0.2
+      })
     );
     tvScreen.position.set(0, 1.25, 0.018);
     tvGroup.add(tvScreen);
@@ -786,7 +808,12 @@ export class HouseBuilder {
     lamp.position.set(x, y, z);
 
     const wireMat = new THREE.MeshStandardMaterial({ color: 0x1f242d, metalness: 0.7 });
-    const paperMat = new THREE.MeshStandardMaterial({ color: 0xfffcf5, roughness: 0.85 });
+    const paperMat = new THREE.MeshStandardMaterial({
+      color: 0xfffcf5,
+      roughness: 0.85,
+      emissive: 0xffedd5,
+      emissiveIntensity: 1.15
+    });
 
     for (let i = 0; i < 3; i++) {
       const a = (i / 3) * Math.PI * 2;
@@ -799,6 +826,7 @@ export class HouseBuilder {
     shade.scale.set(1.0, 1.3, 1.0);
     shade.position.y = 1.55;
     lamp.add(shade);
+    this.floorLampShade = shade;
 
     this.floorLampLight = new THREE.PointLight(0xffeedd, 1.6, 6.0);
     this.floorLampLight.position.y = 1.55;
@@ -826,6 +854,17 @@ export class HouseBuilder {
     const hearth = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.55, 0.32), new THREE.MeshBasicMaterial({ color: 0x181512 }));
     hearth.position.set(0, 0.35, 0.11);
     fp.add(hearth);
+
+    // Glowing warm fireplace embers with radiant bloom
+    const emberMat = new THREE.MeshStandardMaterial({
+      color: 0xff3b00,
+      emissive: 0xff5500,
+      emissiveIntensity: 2.6,
+      roughness: 0.6
+    });
+    const embers = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.22, 12), emberMat);
+    embers.position.set(0, 0.20, 0.16);
+    fp.add(embers);
 
     const warmLight = new THREE.PointLight(0xf59e0b, 1.4, 4.5);
     warmLight.position.set(0, 0.38, 0.22);
@@ -1168,13 +1207,19 @@ export class HouseBuilder {
   toggleLamp() {
     this.lampState = !this.lampState;
     if (this.lampLight) this.lampLight.intensity = this.lampState ? 1.4 : 0;
-    if (this.lampBulb) this.lampBulb.material.color.setHex(this.lampState ? 0xffedd5 : 0x554b42);
+    if (this.lampBulb) {
+      this.lampBulb.material.color.setHex(this.lampState ? 0xffedd5 : 0x554b42);
+      this.lampBulb.material.emissiveIntensity = this.lampState ? 2.2 : 0;
+    }
     return this.lampState;
   }
 
   toggleFloorLamp() {
     this.floorLampState = !this.floorLampState;
     if (this.floorLampLight) this.floorLampLight.intensity = this.floorLampState ? 1.6 : 0;
+    if (this.floorLampShade) {
+      this.floorLampShade.material.emissiveIntensity = this.floorLampState ? 1.15 : 0;
+    }
     return this.floorLampState;
   }
 

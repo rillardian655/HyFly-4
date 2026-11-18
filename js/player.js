@@ -292,6 +292,19 @@ export class PlayerController {
               }
             });
 
+            // Glowing magical starlight crystal at the tip of Elaina's wand
+            const crystalGeo = new THREE.OctahedronGeometry(18, 0);
+            const crystalMat = new THREE.MeshStandardMaterial({
+              color: 0xdbeafe,
+              emissive: 0x60a5fa,
+              emissiveIntensity: 2.2,
+              roughness: 0.1,
+              metalness: 0.2
+            });
+            this.wandCrystal = new THREE.Mesh(crystalGeo, crystalMat);
+            this.wandCrystal.position.set(0, (wBox.max.y || 220) * 0.96, 0);
+            wand.add(this.wandCrystal);
+
             // Position wand naturally at her right hand in relaxed side posture
             wand.position.set(-0.16, 0.74, 0.08);
             wand.rotation.set(-0.25, 0.15, -0.12);
@@ -935,6 +948,13 @@ export class PlayerController {
         this.wandMesh.position.set(-0.16, 0.95, 0.45);
         this.wandMesh.rotation.set(1.2, 0, 0);
       }
+      if (this.wandCrystal) {
+        this.wandCrystal.material.emissiveIntensity = 3.8 + Math.sin(now * 18) * 1.8;
+      }
+    }
+
+    if (this.wandCrystal && this.currentEmote !== 'cast') {
+      this.wandCrystal.material.emissiveIntensity = 1.8 + Math.sin(now * 3.5) * 0.4;
     }
   }
 

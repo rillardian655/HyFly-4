@@ -35,8 +35,8 @@ export class PlayerController {
     this.wasGrounded = true;
     this.walkCycle = 0;
     this.lastFootstepStep = 0;
-    this.walkSpeed = 5.0;
-    this.sprintSpeed = 8.5;
+    this.walkSpeed = 3.2;
+    this.sprintSpeed = 5.8;
     this.gravity = 22.0;
     this.jumpForce = 7.6;
 
@@ -747,30 +747,61 @@ export class PlayerController {
         this.setBoneRotation(bName, 'x', baseX - 0.2 + windFlutter, 0.2);
       });
     } else if (isMoving && this.isGrounded) {
-      const cycleSpeed = speed * (this.keys.sprint ? 3.6 : 2.8);
-      this.walkCycle += dt * cycleSpeed;
+      // Natural human walking cadence: ~1.8 steps per second (108 steps/min)
+      const cycleFrequency = this.keys.sprint ? 1.55 : 1.70;
+      this.walkCycle += dt * speed * cycleFrequency;
 
-      const stepPhase = Math.sin(this.walkCycle);
-      const strideSpeed = this.keys.sprint ? 1.35 : 1.0;
+      // Two-phase gait calculation (0 to 2*PI per full stride)
+      const TWO_PI = Math.PI * 2;
+      let tL = this.walkCycle % TWO_PI;
+      if (tL < 0) tL += TWO_PI;
+      const tR = (tL + Math.PI) % TWO_PI;
 
-      // 1. Dynamic Body Bobbing, Sway & Forward Lean (Dual-step frequency)
-      const strideBob = Math.abs(Math.sin(this.walkCycle)) * 0.045;
-      const strideSway = Math.sin(this.walkCycle) * 0.025;
-      const strideRoll = Math.cos(this.walkCycle) * 0.02;
-      const forwardLean = this.keys.sprint ? 0.09 : 0.05;
-      const turnBank = THREE.MathUtils.clamp(-turnDiff * 0.15, -0.12, 0.12);
+      const strideSpeed = this.keys.sprint ? 1.25 : 1.0;
+      const strideAmp = 0.26 * strideSpeed;
+      const kneeBendAmp = 0.38 * strideSpeed;
 
-      this.modelContainer.position.y = THREE.MathUtils.lerp(this.modelContainer.position.y, this.baseModelY + strideBob, 0.3);
-      this.modelContainer.position.x = THREE.MathUtils.lerp(this.modelContainer.position.x, strideSway * 0.4, 0.3);
+      // 1. Pelvis vertical bobbing & lateral weight transfer
+      // Bobbing is dual-frequency (highest at mid-stance, lowest at touchdown)
+      const strideBob = -Math.cos(tL * 2) * 0.024;
+      const strideSway = Math.sin(tL) * 0.018;
+      const forwardLean = this.keys.sprint ? 0.08 : 0.04;
+      const turnBank = THREE.MathUtils.clamp(-turnDiff * 0.15, -0.1, 0.1);
+
+      this.modelContainer.position.y = THREE.MathUtils.lerp(this.modelContainer.position.y, this.baseModelY + strideBob, 0.25);
+      this.modelContainer.position.x = THREE.MathUtils.lerp(this.modelContainer.position.x, strideSway, 0.25);
       this.modelContainer.rotation.x = THREE.MathUtils.lerp(this.modelContainer.rotation.x, forwardLean, 0.2);
-      this.modelContainer.rotation.z = THREE.MathUtils.lerp(this.modelContainer.rotation.z, strideRoll + turnBank, 0.2);
+      this.modelContainer.rotation.z = THREE.MathUtils.lerp(this.modelContainer.rotation.z, turnBank, 0.2);
 
-      // 2. Active Arm Swing Kinematics (Opposes leg swing for natural biomechanics)
-      const armSwingAmp = 0.35 * strideSpeed;
-      const armSwing = stepPhase * armSwingAmp;
+      // 2. Thigh forward & backward stride
+      const thighL = Math.cos(tL) * strideAmp;
+      const thighR = Math.cos(tR) * strideAmp;
+      this.setBoneRotation('Upper_Leg_L', 'x', baseLegLX - thighL, 0.3);
+      this.setBoneRotation('Upper_Leg_R', 'x', baseLegRX - thighR, 0.3);
+
+      // 3. Natural knee flexion during forward swing phase (lifts foot smoothly)
+      let kneeL = 0;
+      if (tL >= Math.PI) {
+        const sL = (tL - Math.PI) / Math.PI;
+        kneeL = Math.sin(sL * Math.PI) * kneeBendAmp;
+      }
+      this.setBoneRotation('Lower_Leg_L', 'x', baseKneeLX + kneeL * 0.36, 0.3);
+      this.setBoneRotation('Lower_Leg_L', 'z', baseKneeLZ + kneeL, 0.3);
+
+      let kneeR = 0;
+      if (tR >= Math.PI) {
+        const sR = (tR - Math.PI) / Math.PI;
+        kneeR = Math.sin(sR * Math.PI) * kneeBendAmp;
+      }
+      this.setBoneRotation('Lower_Leg_R', 'x', baseKneeRX + kneeR * 0.36, 0.3);
+      this.setBoneRotation('Lower_Leg_R', 'z', baseKneeRZ - kneeR, 0.3);
+
+      // 4. Arm swing in anti-phase with legs (Left arm opposes Left thigh)
+      const armSwingAmp = 0.30 * strideSpeed;
+      const armSwing = Math.cos(tL) * armSwingAmp;
 
       if (!this.currentEmote) {
-        // When Left leg is forward (stepPhase > 0), Left arm swings backward (+armSwing)
+        // When Left thigh is forward (+thighL), Left arm swings backward (+armSwing)
         this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX + armRestX, 0.3);
         this.setBoneRotation('Upper_Arm_L', 'z', baseArmLZ + armSwing, 0.3);
         this.setBoneRotation('Lower_Arm_L', 'z', baseElbowLZ, 0.3);
@@ -781,43 +812,24 @@ export class PlayerController {
         this.setBoneRotation('Lower_Arm_R', 'z', baseElbowRZ, 0.3);
       }
 
-      // 3. Fluid Bipedal Walking Kinematics (Natural Knee Flexion & Thigh Stride)
-      const legStrideAmp = 0.28 * strideSpeed;
-      const kneeBendAmp = 0.42 * strideSpeed;
-
-      // Thigh forward/backward swing
-      this.setBoneRotation('Upper_Leg_L', 'x', baseLegLX - stepPhase * legStrideAmp, 0.35);
-      this.setBoneRotation('Upper_Leg_R', 'x', baseLegRX + stepPhase * legStrideAmp, 0.35);
-
-      // Backward knee flexion on trailing push-off:
-      // Left leg bends when trailing behind (stepPhase < 0)
-      const bendL = Math.max(0, -stepPhase) * kneeBendAmp;
-      this.setBoneRotation('Lower_Leg_L', 'x', baseKneeLX + bendL * 0.36, 0.35);
-      this.setBoneRotation('Lower_Leg_L', 'z', baseKneeLZ + bendL, 0.35);
-
-      // Right leg bends when trailing behind (stepPhase > 0)
-      const bendR = Math.max(0, stepPhase) * kneeBendAmp;
-      this.setBoneRotation('Lower_Leg_R', 'x', baseKneeRX + bendR * 0.36, 0.35);
-      this.setBoneRotation('Lower_Leg_R', 'z', baseKneeRZ - bendR, 0.35);
-
-      // 4. Subtle Hair Flutter
-      const flutter = Math.sin(this.walkCycle * 2) * 0.05;
+      // 5. Subtle hair flutter
+      const flutter = Math.sin(this.walkCycle * 2) * 0.04;
       ['HairBack_01', 'HairBack_02'].forEach((bName) => {
         const baseX = this.initBoneRotations[bName]?.x || 0;
         this.setBoneRotation(bName, 'x', baseX - 0.08 + flutter, 0.2);
       });
 
-      // 5. Dynamic Wand and Broom follow
+      // 6. Dynamic wand and broom
       if (this.broomMesh) {
-        this.broomMesh.rotation.z = 0.82 + Math.sin(this.walkCycle) * 0.05;
+        this.broomMesh.rotation.z = 0.82 + Math.sin(this.walkCycle) * 0.04;
       }
       if (this.wandMesh && !this.currentEmote) {
-        this.wandMesh.position.set(-0.16, 0.74 + Math.sin(this.walkCycle * 2) * 0.02, 0.08 - armSwing * 0.2);
+        this.wandMesh.position.set(-0.16, 0.74 + strideBob * 0.5, 0.08 - armSwing * 0.2);
         this.wandMesh.rotation.set(-0.25 - armSwing * 0.2, 0.15, -0.12);
       }
 
-      // Footstep audio on downbeat
-      const currentStep = Math.floor(this.walkCycle / Math.PI);
+      // Footstep audio on downbeat (heel strike when foot touches ground)
+      const currentStep = Math.floor((this.walkCycle / Math.PI) % 100000);
       if (currentStep !== this.lastFootstepStep) {
         this.lastFootstepStep = currentStep;
         soundEngine.playFootstep('wood');

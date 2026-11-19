@@ -966,6 +966,13 @@ export class PlayerController {
       if (this.wandCrystal) {
         this.wandCrystal.material.emissiveIntensity = 3.8 + Math.sin(now * 18) * 1.8;
       }
+    } else if (this.currentEmote === 'book') {
+      this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX - 0.85, 0.2);
+      this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX - 0.85, 0.2);
+      this.setBoneRotation('Lower_Arm_L', 'x', baseElbowLX - 0.6, 0.2);
+      this.setBoneRotation('Lower_Arm_R', 'x', baseElbowRX - 0.6, 0.2);
+    } else if (this.currentEmote === 'bow') {
+      this.setBoneRotation('Spine', 'x', (this.initBoneRotations['Spine']?.x || 0) + 0.38, 0.25);
     }
 
     if (this.wandCrystal && this.currentEmote !== 'cast') {

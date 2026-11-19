@@ -253,6 +253,18 @@ export class SceneManager {
     return this.envMode;
   }
 
+  toggleWeather() {
+    this.weather = (this.weather === 'rain') ? 'clear' : 'rain';
+    if (this.weather === 'rain') {
+      this.scene.background.setHex(0x374151);
+      this.ambientLight.intensity = 0.25;
+      this.sunLight.intensity = 0.6;
+    } else {
+      this.setEnvironmentMode(this.envMode);
+    }
+    return this.weather;
+  }
+
   cycleEnvironment() {
     const modes = ['day', 'sunset', 'night'];
     const nextIdx = (modes.indexOf(this.envMode) + 1) % modes.length;

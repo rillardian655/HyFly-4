@@ -176,3 +176,21 @@ This project is licensed under the MIT License. See the LICENSE file for full li
 
 Author: xianly runa
 Repository: https://github.com/rillardian655/HyFly-4
+
+## Architectural Documentation
+
+Detailed technical documentation is available in the `docs/` directory:
+
+- [System Architecture](docs/ARCHITECTURE.md)
+- [Controls and Interaction](docs/CONTROLS.md)
+- [PBR Materials and Shading](docs/MATERIALS.md)
+- [Procedural Audio Engine](docs/AUDIO.md)
+- [Asset Attributions](docs/ASSETS.md)
+- [Changelog](docs/CHANGELOG.md)
+
+### Running Automated Unit Tests
+Execute the unit testing harness covering kinematics, collision detection, procedural audio frequencies, and terminal parsers:
+
+```bash
+node tests/runner.js
+```

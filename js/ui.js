@@ -78,6 +78,15 @@ export class UIManager {
     }
 
     // Environment mode button
+    const btnWeather = document.getElementById('btn-weather');
+    if (btnWeather) {
+      btnWeather.addEventListener('click', () => {
+        const w = this.sceneMgr.toggleWeather();
+        btnWeather.textContent = `Weather: ${w.charAt(0).toUpperCase() + w.slice(1)}`;
+        this.showToast(`Weather set to ${w.toUpperCase()}`);
+      });
+    }
+
     if (this.envBtn) {
       this.envBtn.addEventListener('click', () => {
         const mode = this.sceneMgr.cycleEnvironment();

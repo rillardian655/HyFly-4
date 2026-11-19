@@ -1,5 +1,12 @@
 # HyFly-4 Changelog
 
+## [25.1.0] - 2026-11-19
+- Upgraded Master Bedroom with Rehman Double Bed 3D architectural model.
+- Added procedural charcoal grey heather duvet fabric texture generator (`TextureGenerator.createCharcoalDuvetTexture`).
+- Added procedural fine micro-grid pillow fabric texture generator (`TextureGenerator.createPillowFabricTexture`).
+- Reconstructed floating plinth base, extended oak platform deck, horizontal grain headboard, deep mattress, draped skirts on left/right/foot, folded sheet collar, and dual tilted plump pillows.
+- Exposed `window.player` and `window.houseBuilder` for programmatic debugging.
+
 ## [25.0.0] - 2026-11-19
 - Switched to 100% offline local Three.js bundle in `vendor/three/` (no CDN timeouts).
 - Added startup loading screen overlay with WebGL error fallback banner.

@@ -41,6 +41,8 @@ function initApp() {
   // Initialize Player Character
   const player = new PlayerController(sceneMgr.scene, sceneMgr.camera, canvas);
   player.colliders = houseData.colliders;
+  window.player = player;
+  window.houseBuilder = houseBuilder;
 
   // Initial player starting location (Central Corridor near the 3D name banner)
   player.position.set(1.5, 0, 1.5);

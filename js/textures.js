@@ -165,6 +165,67 @@ export class TextureGenerator {
     return tex;
   }
 
+  static createCharcoalDuvetTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+
+    // Charcoal grey heather base matching Rehman Double Bed
+    ctx.fillStyle = '#3a414b';
+    ctx.fillRect(0, 0, 512, 512);
+
+    // Fine woven yarn texture
+    ctx.fillStyle = 'rgba(75, 85, 99, 0.45)';
+    for (let x = 0; x < 512; x += 4) {
+      ctx.fillRect(x, 0, 2, 512);
+    }
+    ctx.fillStyle = 'rgba(30, 35, 42, 0.40)';
+    for (let y = 0; y < 512; y += 4) {
+      ctx.fillRect(0, y, 512, 2);
+    }
+
+    // Micro-speckled fabric weave
+    for (let i = 0; i < 6000; i++) {
+      const rx = Math.floor(Math.random() * 512);
+      const ry = Math.floor(Math.random() * 512);
+      ctx.fillStyle = (Math.random() > 0.5) ? 'rgba(100, 116, 139, 0.25)' : 'rgba(15, 23, 42, 0.25)';
+      ctx.fillRect(rx, ry, 2, 2);
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(6, 6);
+    return tex;
+  }
+
+  static createPillowFabricTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+
+    // Soft off-white / light silver-grey pillow base
+    ctx.fillStyle = '#f1f5f9';
+    ctx.fillRect(0, 0, 256, 256);
+
+    // Subtle pillow weave grid pattern
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.25)';
+    for (let x = 0; x < 256; x += 6) {
+      ctx.fillRect(x, 0, 1.5, 256);
+    }
+    for (let y = 0; y < 256; y += 6) {
+      ctx.fillRect(0, y, 256, 1.5);
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(4, 4);
+    return tex;
+  }
+
   static createAbstractArt(variant = 1) {
     const canvas = document.createElement('canvas');
     canvas.width = 512;

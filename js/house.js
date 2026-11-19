@@ -29,6 +29,8 @@ export class HouseBuilder {
     this.oakWoodTex = TextureGenerator.createNaturalWoodDesk();
     this.quartzTex = TextureGenerator.createQuartzCounter();
     this.linenTex = TextureGenerator.createLinenFabric();
+    this.duvetTex = TextureGenerator.createCharcoalDuvetTexture();
+    this.pillowTex = TextureGenerator.createPillowFabricTexture();
     this.artTex1 = TextureGenerator.createAbstractArt(1);
     this.artTex2 = TextureGenerator.createAbstractArt(2);
     this.shadowTex = TextureGenerator.createFloorContactShadow();
@@ -1070,73 +1072,134 @@ export class HouseBuilder {
 
   /* =========================================================================
      ZONE 4: MASTER BEDROOM NOOK (SE)
-     Platform Bed: 1.7m wide x 2.1m length x 0.48m height
+     Rehman Double Bed: Floating plinth, oak platform deck, tall headboard,
+     charcoal heather draped comforter with skirts, folded collar, dual pillows.
      ========================================================================= */
   buildBedroomZone() {
     const zX = 4.5;
     const zZ = 4.5;
 
-    this.addContactShadow(zX, zZ, 2.8, 2.6, 0.35);
+    this.addContactShadow(zX, zZ, 2.9, 2.7, 0.42);
 
     const bedGroup = new THREE.Group();
     bedGroup.position.set(zX, 0, zZ);
 
-    const oakMat = new THREE.MeshStandardMaterial({ map: this.oakWoodTex, roughness: 0.5 });
-    const mattressMat = new THREE.MeshStandardMaterial({ color: 0xfbf9f5, roughness: 0.8 });
-    const duvetMat = new THREE.MeshStandardMaterial({ map: this.linenTex, roughness: 0.9 });
-    const pillowMat = new THREE.MeshStandardMaterial({ color: 0xd6ccc2, roughness: 0.85 });
+    const oakMat = new THREE.MeshStandardMaterial({
+      map: this.oakWoodTex,
+      roughness: 0.48,
+      metalness: 0.04
+    });
+    const darkPlinthMat = new THREE.MeshStandardMaterial({
+      color: 0x181512,
+      roughness: 0.95
+    });
+    const mattressMat = new THREE.MeshStandardMaterial({
+      color: 0xf8f9fa,
+      roughness: 0.82
+    });
+    const duvetMat = new THREE.MeshStandardMaterial({
+      map: this.duvetTex,
+      roughness: 0.85
+    });
+    const foldCollarMat = new THREE.MeshStandardMaterial({
+      color: 0xf1f5f9,
+      roughness: 0.75
+    });
+    const pillowMat = new THREE.MeshStandardMaterial({
+      map: this.pillowTex,
+      roughness: 0.80
+    });
 
-    // Platform Base: 1.8m x 2.2m x 0.22m
-    const bedBase = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.22, 2.2), oakMat);
-    bedBase.position.y = 0.11;
-    bedBase.castShadow = true;
-    bedBase.receiveShadow = true;
-    bedGroup.add(bedBase);
+    // 1. Recessed Floating Plinth Base (creates hover shadow)
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.10, 1.90), darkPlinthMat);
+    plinth.position.set(0, 0.05, 0.05);
+    plinth.receiveShadow = true;
+    bedGroup.add(plinth);
 
-    // Headboard
-    const headboard = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.95, 0.12), oakMat);
-    headboard.position.set(0, 0.475, 1.04);
+    // 2. Main Oak Platform Deck
+    const platform = new THREE.Mesh(new THREE.BoxGeometry(1.96, 0.18, 2.16), oakMat);
+    platform.position.set(0, 0.19, 0.05);
+    platform.castShadow = true;
+    platform.receiveShadow = true;
+    bedGroup.add(platform);
+
+    // 3. Tall Horizontal Oak Headboard
+    const headboard = new THREE.Mesh(new THREE.BoxGeometry(2.02, 1.05, 0.10), oakMat);
+    headboard.position.set(0, 0.625, 1.08);
     headboard.castShadow = true;
+    headboard.receiveShadow = true;
     bedGroup.add(headboard);
 
-    // Mattress: 1.6m x 2.0m x 0.26m (Standard Queen/Double)
-    const mattress = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.26, 2.0), mattressMat);
-    mattress.position.set(0, 0.35, -0.05);
+    // 4. White Deep Mattress Core
+    const mattress = new THREE.Mesh(new THREE.BoxGeometry(1.76, 0.28, 1.98), mattressMat);
+    mattress.position.set(0, 0.42, 0.0);
+    mattress.castShadow = true;
+    mattress.receiveShadow = true;
     bedGroup.add(mattress);
 
-    // Cozy folded duvet
-    const duvet = new THREE.Mesh(new THREE.BoxGeometry(1.64, 0.12, 1.45), duvetMat);
-    duvet.position.set(0, 0.52, -0.28);
-    bedGroup.add(duvet);
+    // 5. Charcoal Heather Draped Duvet System
+    // 5a. Main Top Comforter
+    const duvetTop = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.08, 1.50), duvetMat);
+    duvetTop.position.set(0, 0.58, -0.22);
+    duvetTop.castShadow = true;
+    bedGroup.add(duvetTop);
 
-    // 2 Pillows
+    // 5b. Folded Top Sheet Collar (White linen fold towards pillows)
+    const foldCollar = new THREE.Mesh(new THREE.BoxGeometry(1.76, 0.06, 0.22), foldCollarMat);
+    foldCollar.position.set(0, 0.57, 0.62);
+    foldCollar.castShadow = true;
+    bedGroup.add(foldCollar);
+
+    // 5c. Left Hanging Duvet Skirt
+    const skirtLeft = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.26, 1.50), duvetMat);
+    skirtLeft.position.set(-0.90, 0.43, -0.22);
+    skirtLeft.castShadow = true;
+    bedGroup.add(skirtLeft);
+
+    // 5d. Right Hanging Duvet Skirt
+    const skirtRight = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.26, 1.50), duvetMat);
+    skirtRight.position.set(0.90, 0.43, -0.22);
+    skirtRight.castShadow = true;
+    bedGroup.add(skirtRight);
+
+    // 5e. Foot Hanging Duvet Skirt
+    const skirtFoot = new THREE.Mesh(new THREE.BoxGeometry(1.84, 0.26, 0.06), duvetMat);
+    skirtFoot.position.set(0, 0.43, -0.98);
+    skirtFoot.castShadow = true;
+    bedGroup.add(skirtFoot);
+
+    // 6. Dual Plump Tilted Pillows (leaning against headboard)
     for (let i = 0; i < 2; i++) {
-      const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.12, 0.42), pillowMat);
-      pillow.position.set(-0.45 + i * 0.9, 0.54, 0.62);
-      pillow.rotation.x = -0.15;
+      const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.16, 0.44), pillowMat);
+      pillow.position.set(-0.46 + i * 0.92, 0.60, 0.70);
+      pillow.rotation.x = -0.25; // ~14.3 degree tilt against headboard
+      pillow.castShadow = true;
       bedGroup.add(pillow);
     }
 
     bedGroup.userData = {
       interactive: true,
       name: 'bed',
-      label: 'Platform Bed (Press [E]: Lie Down & Rest)'
+      label: 'Double Bed (Press [E]: Lie Down & Rest)'
     };
     this.interactiveObjects.push(bedGroup);
     this.scene.add(bedGroup);
     this.addCollider(bedGroup);
 
-    // Floating Oak Nightstands on both sides (0.45m x 0.40m x 0.44m height)
+    // Floating Oak Nightstands on both sides
     for (const side of [-1, 1]) {
       const stand = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.38, 0.40), oakMat);
-      stand.position.set(zX + side * 1.35, 0.19, zZ + 0.85);
+      stand.position.set(zX + side * 1.40, 0.19, zZ + 0.85);
       stand.castShadow = true;
       this.scene.add(stand);
       this.addCollider(stand, 0.04);
 
       // Bedside Minimalist Lamp
-      const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.24, 16), new THREE.MeshStandardMaterial({ color: 0xfffcf5, roughness: 0.8 }));
-      lamp.position.set(zX + side * 1.35, 0.50, zZ + 0.85);
+      const lamp = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.07, 0.09, 0.24, 16),
+        new THREE.MeshStandardMaterial({ color: 0xfffcf5, roughness: 0.8 })
+      );
+      lamp.position.set(zX + side * 1.40, 0.50, zZ + 0.85);
       this.scene.add(lamp);
     }
   }

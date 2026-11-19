@@ -991,6 +991,22 @@ export class HouseBuilder {
     fridge.add(body);
 
     this.fridgeDoor = new THREE.Group();
+
+    // Interior shelf contents
+    const milkMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 });
+    const milk = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.18, 12), milkMat);
+    milk.position.set(0.14, 1.25, 0.05);
+    fridge.add(milk);
+
+    const juiceMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4 });
+    const juice = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.16, 0.08), juiceMat);
+    juice.position.set(-0.14, 1.25, 0.05);
+    fridge.add(juice);
+
+    const appleMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 });
+    const apple = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 10), appleMat);
+    apple.position.set(0, 0.95, 0.08);
+    fridge.add(apple);
     this.fridgeDoor.position.set(0.42, 0, 0.35);
 
     const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(0.84, 1.83, 0.06), matteWhiteMat);

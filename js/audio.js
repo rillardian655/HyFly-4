@@ -276,6 +276,11 @@ class SoundEngine {
     }
   }
 
+  playWindRustle() {
+    if (!this.ctx) return;
+    this.playKeyClick();
+  }
+
   playFireplaceCrackling(active) {
     if (!this.ctx) return;
     if (active) {

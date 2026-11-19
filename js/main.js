@@ -108,6 +108,13 @@ function initApp() {
         ui.showToast(isOpen ? 'Opened refrigerator: Grabbed an iced matcha latte' : 'Closed refrigerator');
         break;
 
+      case 'island':
+      case 'sink':
+        const waterOn = houseBuilder.toggleWater();
+        soundEngine.playWaterStream(waterOn);
+        ui.showToast(waterOn ? 'Kitchen faucet running: Crisp filtered spring water' : 'Kitchen faucet turned off');
+        break;
+
       case 'stove':
         const flameOn = houseBuilder.toggleStove();
         soundEngine.playLampClick(flameOn);

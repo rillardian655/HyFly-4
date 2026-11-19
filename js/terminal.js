@@ -127,6 +127,15 @@ export class VirtualTerminal {
     }
 
     switch (cmd) {
+      case 'weather':
+        this.println("Weather system active: Rain / Overcast / Day / Sunset presets available.");
+        break;
+
+      case 'photo':
+        document.body.classList.toggle('photo-mode');
+        this.println("Photo Mode toggled.");
+        break;
+
       case 'help':
         this.println("Available Commands:");
         this.println("  help       - Show this command reference");

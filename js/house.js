@@ -1257,6 +1257,12 @@ export class HouseBuilder {
     return this.stoveState;
   }
 
+  toggleWater() {
+    this.waterRunning = !this.waterRunning;
+    if (this.waterStream) this.waterStream.visible = this.waterRunning;
+    return this.waterRunning;
+  }
+
   updateScreenCanvas(time) {
     if (!this.screenCtx) return;
     const ctx = this.screenCtx;

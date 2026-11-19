@@ -973,6 +973,13 @@ export class PlayerController {
       this.setBoneRotation('Lower_Arm_R', 'x', baseElbowRX - 0.6, 0.2);
     } else if (this.currentEmote === 'bow') {
       this.setBoneRotation('Spine', 'x', (this.initBoneRotations['Spine']?.x || 0) + 0.38, 0.25);
+    } else if (this.currentEmote === 'sit') {
+      this.setBoneRotation('Thigh_L', 'x', baseHipLX - 1.45, 0.25);
+      this.setBoneRotation('Thigh_R', 'x', baseHipRX - 1.45, 0.25);
+      this.setBoneRotation('Lower_Leg_L', 'x', baseKneeLX + 1.55, 0.25);
+      this.setBoneRotation('Lower_Leg_R', 'x', baseKneeRX + 1.55, 0.25);
+      this.setBoneRotation('Upper_Arm_L', 'x', baseArmLX - 0.35, 0.2);
+      this.setBoneRotation('Upper_Arm_R', 'x', baseArmRX - 0.35, 0.2);
     }
 
     if (this.wandCrystal && this.currentEmote !== 'cast') {

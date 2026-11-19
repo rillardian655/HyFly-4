@@ -276,6 +276,13 @@ class SoundEngine {
     }
   }
 
+  playFireplaceCrackling(active) {
+    if (!this.ctx) return;
+    if (active) {
+      this.playChime();
+    }
+  }
+
   playDoorHinge() {
     if (!this.ctx) return;
     this.playKeyClick();

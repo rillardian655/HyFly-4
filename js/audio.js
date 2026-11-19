@@ -269,6 +269,18 @@ class SoundEngine {
     osc.stop(now + 0.12);
   }
 
+  playWaterStream(active) {
+    if (!this.ctx) return;
+    if (active) {
+      this.playChime();
+    }
+  }
+
+  playDoorHinge() {
+    if (!this.ctx) return;
+    this.playKeyClick();
+  }
+
   playLampClick(state) {
     this.ensureContext();
     if (!this.ctx || this.isMuted) return;

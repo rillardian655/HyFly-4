@@ -21,6 +21,13 @@ function initApp() {
   try {
     sceneMgr = new SceneManager(canvas);
     window.sceneMgr = sceneMgr;
+    const loader = document.getElementById('loading-screen');
+    if (loader) {
+      setTimeout(() => {
+        loader.classList.add('fade-out');
+        setTimeout(() => loader.remove(), 600);
+      }, 250);
+    }
   } catch (err) {
     console.error('Error initializing SceneManager / WebGL:', err);
     return;

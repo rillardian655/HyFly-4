@@ -12,6 +12,7 @@
 import * as THREE from 'three';
 import { create3DNameBanner } from './text3d.js?v=23.0';
 import { TextureGenerator } from './textures.js?v=23.0';
+import { GardenZone } from './zones/garden.js';
 
 export class HouseBuilder {
   constructor(scene) {
@@ -71,6 +72,10 @@ export class HouseBuilder {
   build() {
     this.buildHouseArchitecture();
     this.buildRoofAndCeiling();
+
+    // Outdoor Garden Terrace
+    const gardenZone = new GardenZone(this.scene);
+    this.scene.add(gardenZone.buildTerrace());
     this.buildStudioZone();
     this.buildLivingRoomZone();
     this.buildKitchenZone();

@@ -1,6 +1,6 @@
 {
   "name": "hyfly-4",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Interactive 3D Virtual House and World featuring Elaina",
   "main": "js/main.js",
   "type": "module",

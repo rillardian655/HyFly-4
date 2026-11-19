@@ -256,10 +256,12 @@ export class SceneManager {
   toggleWeather() {
     this.weather = (this.weather === 'rain') ? 'clear' : 'rain';
     if (this.weather === 'rain') {
+      document.body.classList.add('rain-active');
       this.scene.background.setHex(0x374151);
       this.ambientLight.intensity = 0.25;
       this.sunLight.intensity = 0.6;
     } else {
+      document.body.classList.remove('rain-active');
       this.setEnvironmentMode(this.envMode);
     }
     return this.weather;

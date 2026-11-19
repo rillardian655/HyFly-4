@@ -67,7 +67,7 @@ export class PlayerController {
     this.isLoaded = false;
 
     // Kinematic Animation & Emote State
-    this.currentEmote = null; // 'wave' | 'cast' | 'book' | 'bow' | null
+    this.currentEmote = null; // 'wave' | 'cast' | 'book' | 'bow' | 'sit' | null
     this.emoteTimer = 0;
     this.isFlying = false;
     this.flightHoverY = 1.4;
@@ -547,7 +547,7 @@ export class PlayerController {
       return;
     }
     this.currentEmote = type;
-    this.emoteTimer = (type === 'wave') ? 3.2 : (type === 'cast' ? 3.5 : 4.0);
+    this.emoteTimer = (type === 'wave') ? 3.2 : (type === 'cast' ? 3.5 : (type === 'sit' ? 999 : 4.0));
     soundEngine.playChime();
   }
 

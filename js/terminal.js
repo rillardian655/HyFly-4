@@ -127,6 +127,15 @@ export class VirtualTerminal {
     }
 
     switch (cmd) {
+      case 'garden':
+        this.println("Garden terrace: Outdoor deck, glass railing, bamboo planters at (+18m, -7m).");
+        break;
+      case 'fireplace':
+        this.println("Stone hearth: Toggle cozy fire with [E] in the living room.");
+        break;
+      case 'sit':
+        this.println("Elaina relaxes in sitting posture. Use [6] to toggle.");
+        break;
       case 'weather':
         this.println("Weather system active: Rain / Overcast / Day / Sunset presets available.");
         break;

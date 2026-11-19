@@ -1039,6 +1039,12 @@ export class HouseBuilder {
   }
 
   buildWoodCounterStool(x, y, z) {
+    // Decorative architectural books on table
+    const bookMat1 = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.5 });
+    const book1 = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.03, 0.32), bookMat1);
+    book1.position.set(4.5, 0.45, -3.8);
+    this.scene.add(book1);
+
     const stool = new THREE.Group();
     stool.position.set(x, y, z);
 

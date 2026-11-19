@@ -1257,6 +1257,11 @@ export class HouseBuilder {
     return this.stoveState;
   }
 
+  toggleFireplace() {
+    this.fireplaceOn = !this.fireplaceOn;
+    return this.fireplaceOn;
+  }
+
   toggleWater() {
     this.waterRunning = !this.waterRunning;
     if (this.waterStream) this.waterStream.visible = this.waterRunning;

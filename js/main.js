@@ -128,6 +128,12 @@ function initApp() {
         ui.showToast(flameOn ? 'Kitchen stove ignited (Blue cooking flame)' : 'Kitchen stove turned off');
         break;
 
+      case 'fireplace':
+        const fpOn = houseBuilder.toggleFireplace();
+        soundEngine.playFireplaceCrackling(fpOn);
+        ui.showToast(fpOn ? 'Living room fireplace lit: Cozy amber warmth' : 'Fireplace extinguished');
+        break;
+
       case 'sofa':
         soundEngine.playChime();
         ui.showToast('Relaxed on the living room sofa');

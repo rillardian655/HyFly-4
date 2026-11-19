@@ -173,6 +173,10 @@ function initApp() {
   const btnWave = document.getElementById('btn-emote-wave');
   const btnCast = document.getElementById('btn-emote-cast');
   const btnFly = document.getElementById('btn-emote-fly');
+  const btnBook = document.getElementById('btn-emote-book');
+  const btnBow = document.getElementById('btn-emote-bow');
+  if (btnBook) btnBook.addEventListener('click', () => player.playEmote('book'));
+  if (btnBow) btnBow.addEventListener('click', () => player.playEmote('bow'));
 
   if (btnWave) {
     btnWave.addEventListener('click', () => {

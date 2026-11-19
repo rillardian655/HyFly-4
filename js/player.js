@@ -520,7 +520,7 @@ export class PlayerController {
   }
 
   cycleCameraView() {
-    const modes = ['full', 'topdown', 'closeup'];
+    const modes = ['full', 'topdown', 'closeup', 'first_person'];
     const nextIdx = (modes.indexOf(this.cameraMode) + 1) % modes.length;
     this.cameraMode = modes[nextIdx];
 
@@ -532,6 +532,10 @@ export class PlayerController {
       this.targetCamDistance = 4.4;
       this.camAngleY = 1.18; // Looking down from above
       this.camHeight = 1.2;
+    } else if (this.cameraMode === 'first_person') {
+      this.targetCamDistance = 0.35;
+      this.camAngleY = 0.05;
+      this.camHeight = 1.45;
     } else if (this.cameraMode === 'closeup') {
       this.targetCamDistance = 1.9;
       this.camAngleY = 0.12;

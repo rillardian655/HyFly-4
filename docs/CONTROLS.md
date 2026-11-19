@@ -14,6 +14,8 @@
 - [3] / F: Broom Flight mode
 - [4] Read Book emote
 - [5] Polite Bow emote
+- [6] Sit Down emote (lounge on sofa or terrace)
+- V: Cycle camera view (Full Body, Top-Down, Portrait, First-Person POV)
 
 ## Camera & Utilities
 - V: Cycle camera view (Full Body, Top-Down, Portrait)

@@ -1,0 +1,21 @@
+{
+  "name": "hyfly-4",
+  "version": "1.0.0",
+  "description": "Interactive 3D Virtual House and World featuring Elaina",
+  "main": "js/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "python3 dev_server.py",
+    "test": "node tests/runner.js",
+    "ci": "bash scripts/ci-check.sh",
+    "lint": "eslint js/**/*.js",
+    "format": "prettier --write **/*.{html,css,js,json,md}"
+  },
+  "keywords": ["threejs", "webgl", "3d", "interactive", "architecture", "anime"],
+  "author": "xianly runa",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.5"
+  }
+}

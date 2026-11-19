@@ -209,7 +209,11 @@ function initApp() {
   }
 
   window.addEventListener('keydown', (e) => {
-    if (e.code === 'KeyV' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+    if (e.code === 'KeyP') {
+      document.body.classList.toggle('photo-mode');
+      const isPhoto = document.body.classList.contains('photo-mode');
+      ui.showToast(isPhoto ? 'Photo Mode: UI hidden [Press P to exit]' : 'Photo Mode: Exited');
+    } else if (e.code === 'KeyV' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
       setTimeout(() => {
         updateCameraBtnLabel(player.cameraMode);
         ui.showToast(`Camera View: ${player.cameraMode.toUpperCase()}`);

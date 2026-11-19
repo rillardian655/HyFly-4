@@ -17,3 +17,8 @@ HyFly-4 is an architectural 3D browser exploration experience powered by Three.j
 3. HouseBuilder (`js/house.js`):
    - Multi-room Scandinavian and Japandi interior architecture.
    - Raycasted interactive appliances and animated components.
+
+## Local Offline Architecture (v25.0)
+
+- Self-contained vendor runtime in `vendor/three/` removes external CDN reliance.
+- Modular zoning: Studio, Living Room, Kitchen, Bedroom, and Garden terrace (`js/zones/`).

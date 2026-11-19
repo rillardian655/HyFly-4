@@ -695,3 +695,28 @@ dialog::backdrop {
   box-shadow: 0 0 16px rgba(212, 175, 55, 0.5);
 }
 
+
+/* Photo Mode Clean View */
+body.photo-mode .ui-layer {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.photo-mode-indicator {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fdfcfb;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  z-index: 9999;
+}
+
+body.photo-mode .photo-mode-indicator {
+  display: block;
+}

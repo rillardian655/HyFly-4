@@ -169,6 +169,9 @@ function initApp() {
       }
     } else if (e.code === 'Digit1') {
       ui.showToast('Elaina waves cheerfully!');
+    } else if (e.code === 'Digit6') {
+      player.playEmote('sit');
+      ui.showToast('Elaina sits down to rest comfortably');
     } else if (e.code === 'Digit2') {
       ui.showToast('Elaina casts a starlight magic spell!');
     } else if (e.code === 'Digit3' || e.code === 'KeyF') {
@@ -188,6 +191,8 @@ function initApp() {
   const btnFly = document.getElementById('btn-emote-fly');
   const btnBook = document.getElementById('btn-emote-book');
   const btnBow = document.getElementById('btn-emote-bow');
+  const btnSit = document.getElementById('btn-emote-sit');
+  if (btnSit) btnSit.addEventListener('click', () => player.playEmote('sit'));
   if (btnBook) btnBook.addEventListener('click', () => player.playEmote('book'));
   if (btnBow) btnBow.addEventListener('click', () => player.playEmote('bow'));
 

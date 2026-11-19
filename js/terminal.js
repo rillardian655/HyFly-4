@@ -150,6 +150,10 @@ export class VirtualTerminal {
         this.println("  exit       - Close virtual PC monitor");
         break;
 
+      case 'status':
+        this.println("Engine: Three.js r160 WebGL2 | 60 FPS locked | 28m x 28m | Architect: xianly runa");
+        break;
+
       case 'about':
         this.println("HyFly-4: Interactive 3D Virtual Workspace & Autonomous Lab");
         this.println("Engineered with WebGL, Three.js, Web Audio API, and Modern HTML5 Standards.");

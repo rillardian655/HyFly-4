@@ -720,3 +720,10 @@ body.photo-mode .ui-layer {
 body.photo-mode .photo-mode-indicator {
   display: block;
 }
+
+/* Responsive improvements */
+@media (max-width: 900px) {
+  .hints-pill {
+    display: none !important;
+  }
+}
